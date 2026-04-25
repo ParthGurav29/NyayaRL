@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2021_078",
+  "citation": "State of Karnataka v. Manjunath (2021) 5 SCC 345",
+  "template_category": "323_325_307",
+  "ipc_sections": [307],
+  "judgment": "acquit",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "medical_report_injuries": 0.7,
+    "weapon_used": 0.4,
+    "clothing_bloodstained": 0.5
+  },
+  "key_witnesses": ["victim_survivor", "police_officer"],
+  "reasoning_summary": "Acquittal as intention to kill was not proven. Injuries were on non-vital parts. No weapon recovered. Incident occurred in sudden fight. Benefit of doubt given to accused on charge of attempt to murder.",
+  "facts_established": {
+    "actus_reus": "Injuries caused but not life-threatening",
+    "mens_rea": "Intention to kill not established",
+    "chain_of_custody": "Weak - no weapon, no eyewitness"
+  },
+  "full_text_url": "https://ildc.in/cases/2021/078"
+}

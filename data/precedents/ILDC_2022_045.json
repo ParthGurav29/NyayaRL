@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2022_045",
+  "citation": "State of Bihar v. Ram Kumar (2022) 2 SCC 789",
+  "template_category": "498A_304B",
+  "ipc_sections": [498, 304],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "dying_declaration": 0.9,
+    "demand_letters": 0.95,
+    "medical_report_burns": 0.85
+  },
+  "key_witnesses": ["magistrate", "parents_of_deceased"],
+  "reasoning_summary": "Conviction upheld. Dying declaration corroborated by demand letters recovered from scene. Pattern of dowry harassment established. Death occurred within 3 years of marriage triggering 304B presumption.",
+  "facts_established": {
+    "actus_reus": "Unnatural death within 7 years of marriage",
+    "mens_rea": "Cruelty and dowry demands proven",
+    "chain_of_custody": "Handwritten demand letters match accused handwriting"
+  },
+  "full_text_url": "https://ildc.in/cases/2022/045"
+}

@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2019_001",
+  "citation": "State of Maharashtra v. Rajesh Sharma (2019) 4 SCC 123",
+  "template_category": "302_304",
+  "ipc_sections": [302],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "weapon": 0.9,
+    "autopsy_report": 0.95,
+    "bloodstains": 0.8
+  },
+  "key_witnesses": ["eyewitness", "medical_officer"],
+  "reasoning_summary": "Mens rea established through eyewitness testimony regarding prior threats and angry altercation. Chain of custody confirmed through fingerprints on weapon and bloodstains matching victim. IPC 302 applied as intention to kill was proven beyond reasonable doubt.",
+  "facts_established": {
+    "actus_reus": "Accused stabbed victim with knife",
+    "mens_rea": "Prior argument and threats witnessed by neighbor",
+    "chain_of_custody": "Fingerprints on knife, accused arrested at scene"
+  },
+  "full_text_url": "https://ildc.in/cases/2019/001"
+}

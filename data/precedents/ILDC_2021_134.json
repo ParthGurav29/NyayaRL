@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2021_134",
+  "citation": "State of AP v. Narasimha Rao (2021) 7 SCC 234",
+  "template_category": "392_394_397",
+  "ipc_sections": [392],
+  "judgment": "acquit",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "victim_identification": 0.5,
+    "stolen_property_recovered": 0.3,
+    "fingerprints_scene": 0.4
+  },
+  "key_witnesses": ["victim_robbery"],
+  "reasoning_summary": "Acquittal as identification was weak. No stolen property recovered. Single witness testimony insufficient. Test identification parade conducted after delay. Benefit of doubt to accused.",
+  "facts_established": {
+    "actus_reus": "Robbery alleged but not proven",
+    "mens_rea": "Not established",
+    "chain_of_custody": "Weak - no recovery, delayed identification"
+  },
+  "full_text_url": "https://ildc.in/cases/2021/134"
+}

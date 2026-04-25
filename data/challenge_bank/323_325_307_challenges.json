@@ -1,0 +1,53 @@
+{
+  "template_id": "323_325_307_assault",
+  "challenges": [
+    {
+      "id": "challenge_323_1",
+      "text": "Injuries were caused in exercise of private defence, not aggression",
+      "targets_step": 4,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_323_2",
+      "text": "Medical report does not corroborate victim's version of assault",
+      "targets_step": 1,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_323_3",
+      "text": "Weapon allegedly used was never recovered from accused",
+      "targets_step": 3,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_323_4",
+      "text": "Incident occurred during sudden fight - no premeditation",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_323_5",
+      "text": "Injuries are simple, not grievous - IPC 325 not applicable",
+      "targets_step": 5,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_323_6",
+      "text": "No intention to kill - vital parts were not targeted",
+      "targets_step": 2,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_323_7",
+      "text": "Bystander testimony is inconsistent with medical evidence",
+      "targets_step": 2,
+      "severity": "low"
+    },
+    {
+      "id": "challenge_323_8",
+      "text": "CCTV footage does not show accused causing injuries",
+      "targets_step": 3,
+      "severity": "medium"
+    }
+  ]
+}

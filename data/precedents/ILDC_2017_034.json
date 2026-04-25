@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2017_034",
+  "citation": "State of Delhi v. Mukesh Kumar (2017) 5 SCC 789",
+  "template_category": "420_120B",
+  "ipc_sections": [420, 120],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "forged_documents": 0.95,
+    "bank_records": 0.9,
+    "phone_records": 0.7
+  },
+  "key_witnesses": ["victim", "bank_official", "document_expert"],
+  "reasoning_summary": "Conviction under IPC 420 and 120B upheld. Forged property documents proven by expert testimony. Bank records showed money trail to accused. Conspiracy established through phone records showing coordination between co-accused.",
+  "facts_established": {
+    "actus_reus": "Accused obtained property through forged documents",
+    "mens_rea": "Knowledge of forgery proven, deliberate deception",
+    "chain_of_custody": "Documents recovered, signatures matched"
+  },
+  "full_text_url": "https://ildc.in/cases/2017/034"
+}

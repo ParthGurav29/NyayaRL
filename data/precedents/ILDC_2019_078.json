@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2019_078",
+  "citation": "State of Gujarat v. Patel Brothers (2019) 8 SCC 123",
+  "template_category": "420_120B",
+  "ipc_sections": [420, 120],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "bank_records": 0.95,
+    "victim_statement": 0.8,
+    "witness_testimony_conspiracy": 0.85
+  },
+  "key_witnesses": ["victim", "accomplice_turned_approver"],
+  "reasoning_summary": "Conviction based on approver testimony corroborated by bank records. Multiple accused conspired to defraud investors in ponzi scheme. IPC 120B conspiracy proven through meeting evidence and money trails.",
+  "facts_established": {
+    "actus_reus": "Fraudulent scheme operated, money collected",
+    "mens_rea": "Intentional deception, promises made with no intent to fulfill",
+    "chain_of_custody": "Money traced to accused accounts"
+  },
+  "full_text_url": "https://ildc.in/cases/2019/078"
+}

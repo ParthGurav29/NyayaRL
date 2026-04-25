@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2020_045",
+  "citation": "State of Punjab v. Gurpreet Singh (2020) 7 SCC 456",
+  "template_category": "302_304",
+  "ipc_sections": [304],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "autopsy_report": 0.95,
+    "weapon": 0.7,
+    "cctv_footage": 0.6
+  },
+  "key_witnesses": ["medical_officer", "neighbor"],
+  "reasoning_summary": "IPC 304 (culpable homicide not amounting to murder) applied as mens rea for murder was not established. Death occurred during sudden fight without premeditation. Medical evidence showed single blow causing death.",
+  "facts_established": {
+    "actus_reus": "Accused caused fatal injury during altercation",
+    "mens_rea": "Sudden fight, no premeditation or intention to kill",
+    "chain_of_custody": "Weapon recovered, accused present at scene"
+  },
+  "full_text_url": "https://ildc.in/cases/2020/045"
+}

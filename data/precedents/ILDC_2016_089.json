@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2016_089",
+  "citation": "State of Haryana v. Ramesh Chand (2016) 6 SCC 234",
+  "template_category": "498A_304B",
+  "ipc_sections": [498, 304],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "dying_declaration": 0.95,
+    "medical_report_burns": 0.9,
+    "demand_letters": 0.8
+  },
+  "key_witnesses": ["parents_of_deceased", "magistrate"],
+  "reasoning_summary": "Conviction under 304B dowry death upheld. Dying declaration recorded by magistrate was voluntary and truthful. Medical evidence showed unnatural burns. Prior dowry demands proven through parent testimony.",
+  "facts_established": {
+    "actus_reus": "Death by burns within 7 years of marriage",
+    "mens_rea": "Cruelty and harassment for dowry proven",
+    "chain_of_custody": "Dying declaration directly implicates accused"
+  },
+  "full_text_url": "https://ildc.in/cases/2016/089"
+}

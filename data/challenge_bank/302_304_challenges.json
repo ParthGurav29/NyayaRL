@@ -1,0 +1,53 @@
+{
+  "template_id": "302_304_homicide",
+  "challenges": [
+    {
+      "id": "challenge_302_1",
+      "text": "No direct evidence places the accused at the crime scene at the time of occurrence",
+      "targets_step": 3,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_302_2",
+      "text": "Eyewitness testimony is unreliable due to poor lighting conditions at the scene",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_302_3",
+      "text": "Weapon recovered does not have matching fingerprints or DNA evidence",
+      "targets_step": 3,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_302_4",
+      "text": "Alternative perpetrator theory not ruled out by investigation",
+      "targets_step": 4,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_302_5",
+      "text": "Medical evidence does not conclusively prove cause of death",
+      "targets_step": 1,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_302_6",
+      "text": "Accused has no prior enmity with victim - motive not established",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_302_7",
+      "text": "Bloodstains could have been transferred accidentally - no proof of assault",
+      "targets_step": 1,
+      "severity": "low"
+    },
+    {
+      "id": "challenge_302_8",
+      "text": "CCTV footage is unclear and does not positively identify the accused",
+      "targets_step": 3,
+      "severity": "medium"
+    }
+  ]
+}

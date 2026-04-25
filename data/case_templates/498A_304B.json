@@ -1,0 +1,90 @@
+{
+  "template_id": "498A_304B_domestic",
+  "description": "Domestic Violence and Dowry Death cases",
+  "ipc_sections": [498, 304],
+  "difficulty_range": [2, 4],
+
+  "evidence_pool": [
+    {
+      "id": "injury_photographs",
+      "type": "forensic",
+      "description": "Photos of injuries on deceased before death",
+      "actus_reus_weight": 0.85,
+      "presence_prob": 0.70
+    },
+    {
+      "id": "dying_declaration",
+      "type": "documentary",
+      "description": "Statement recorded by magistrate before victim died",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.60
+    },
+    {
+      "id": "demand_letters",
+      "type": "documentary",
+      "description": "Letters or messages demanding dowry",
+      "actus_reus_weight": 0.9,
+      "presence_prob": 0.50
+    },
+    {
+      "id": "panchnama",
+      "type": "documentary",
+      "description": "Crime scene investigation report",
+      "actus_reus_weight": 0.8,
+      "presence_prob": 0.85
+    },
+    {
+      "id": "medical_report_burns",
+      "type": "forensic",
+      "description": "Medical examination showing burn injuries",
+      "actus_reus_weight": 0.9,
+      "presence_prob": 0.90
+    }
+  ],
+
+  "witness_pool": [
+    {
+      "id": "parents_of_deceased",
+      "type": "character",
+      "description": "Victim parents testifying about dowry demands",
+      "mens_rea_keywords": ["demanded", "harassed", "tortured", "complained"],
+      "reliability_alpha": 5,
+      "reliability_beta": 4
+    },
+    {
+      "id": "neighbor_domestic",
+      "type": "character",
+      "description": "Neighbor who heard domestic disputes",
+      "mens_rea_keywords": ["shouting", "crying", "fight", "abuse"],
+      "reliability_alpha": 5,
+      "reliability_beta": 4
+    },
+    {
+      "id": "relative_witness",
+      "type": "character",
+      "description": "Relative who witnessed harassment",
+      "mens_rea_keywords": ["cruelty", "demand", "pressure", "threatened"],
+      "reliability_alpha": 4,
+      "reliability_beta": 4
+    },
+    {
+      "id": "magistrate",
+      "type": "expert",
+      "description": "Magistrate who recorded dying declaration",
+      "mens_rea_keywords": ["voluntary", "conscious", "coherent", "truthful"],
+      "reliability_alpha": 9,
+      "reliability_beta": 1
+    }
+  ],
+
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "min_argument_steps": 6,
+    "key_evidence": ["dying_declaration", "medical_report_burns"],
+    "key_witnesses": ["parents_of_deceased", "magistrate"]
+  },
+
+  "precedents": ["ILDC_2016_089", "ILDC_2018_156", "ILDC_2020_201", "ILDC_2022_045"],
+
+  "notes": "Level 3+: Often involves conflicting family testimonies. 498A cruelty + 304B dowry death require proving death within 7 years of marriage with cruelty."
+}

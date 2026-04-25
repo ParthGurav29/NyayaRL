@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2015_067",
+  "citation": "State of Kerala v. Thomas George (2015) 3 SCC 456",
+  "template_category": "323_325_307",
+  "ipc_sections": [323],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "medical_report_injuries": 0.95,
+    "weapon_used": 0.8,
+    "clothing_bloodstained": 0.75
+  },
+  "key_witnesses": ["victim_survivor", "treating_doctor"],
+  "reasoning_summary": "Conviction under IPC 323 for voluntarily causing hurt. Medical evidence showed simple injuries. Victim testimony corroborated by treating doctor. No intention to kill established.",
+  "facts_established": {
+    "actus_reus": "Accused caused physical injury to victim",
+    "mens_rea": "Intention to cause hurt proven",
+    "chain_of_custody": "Accused identified, injuries documented"
+  },
+  "full_text_url": "https://ildc.in/cases/2015/067"
+}

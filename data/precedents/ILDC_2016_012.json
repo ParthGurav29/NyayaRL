@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2016_012",
+  "citation": "State of Maharashtra v. Baburao Patil (2016) 2 SCC 123",
+  "template_category": "392_394_397",
+  "ipc_sections": [392],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "stolen_property_recovered": 0.95,
+    "victim_identification": 0.9,
+    "weapon_robbery": 0.7
+  },
+  "key_witnesses": ["victim_robbery", "eyewitness_robbery"],
+  "reasoning_summary": "Conviction under IPC 392 for robbery. Stolen property recovered from accused. Victim identified accused in test identification parade. Accused used force to snatch chain.",
+  "facts_established": {
+    "actus_reus": "Accused snatched chain using force",
+    "mens_rea": "Intention to steal, use of force proven",
+    "chain_of_custody": "Stolen property recovered from accused"
+  },
+  "full_text_url": "https://ildc.in/cases/2016/012"
+}

@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2021_089",
+  "citation": "State of Tamil Nadu v. Venkatesh (2021) 3 SCC 567",
+  "template_category": "302_304",
+  "ipc_sections": [304],
+  "judgment": "acquit",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "autopsy_report": 0.8,
+    "cctv_footage": 0.4,
+    "weapon": 0.5
+  },
+  "key_witnesses": ["medical_officer", "neighbor"],
+  "reasoning_summary": "Acquittal ordered as prosecution failed to prove mens rea beyond reasonable doubt. CCTV footage was unclear, no eyewitness to actual stabbing, and accused had no prior enmity. Benefit of doubt given to accused.",
+  "facts_established": {
+    "actus_reus": "Death occurred but perpetrator not conclusively identified",
+    "mens_rea": "Not established - no evidence of intention or knowledge",
+    "chain_of_custody": "Weak - no direct evidence linking accused to weapon"
+  },
+  "full_text_url": "https://ildc.in/cases/2021/089"
+}

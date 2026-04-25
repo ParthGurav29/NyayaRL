@@ -1,0 +1,90 @@
+{
+  "template_id": "323_325_307_assault",
+  "description": "Voluntarily Causing Hurt / Grievous Hurt / Attempt to Murder",
+  "ipc_sections": [323, 325, 307],
+  "difficulty_range": [1, 4],
+
+  "evidence_pool": [
+    {
+      "id": "medical_report_injuries",
+      "type": "forensic",
+      "description": "Medical report documenting nature and severity of injuries",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.95
+    },
+    {
+      "id": "weapon_used",
+      "type": "physical",
+      "description": "Weapon used in assault (stick, knife, acid, etc.)",
+      "actus_reus_weight": 0.85,
+      "presence_prob": 0.70
+    },
+    {
+      "id": "clothing_bloodstained",
+      "type": "forensic",
+      "description": "Accused clothing with victim blood",
+      "actus_reus_weight": 0.8,
+      "presence_prob": 0.65
+    },
+    {
+      "id": "cctv_assault",
+      "type": "digital",
+      "description": "Video footage of assault incident",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.40
+    },
+    {
+      "id": "location_photos",
+      "type": "documentary",
+      "description": "Photos of crime scene showing blood, weapons",
+      "actus_reus_weight": 0.7,
+      "presence_prob": 0.75
+    }
+  ],
+
+  "witness_pool": [
+    {
+      "id": "victim_survivor",
+      "type": "eyewitness",
+      "description": "Victim who survived the assault",
+      "mens_rea_keywords": ["intention", "aimed", "targeted", "deliberately"],
+      "reliability_alpha": 6,
+      "reliability_beta": 3
+    },
+    {
+      "id": "bystander",
+      "type": "eyewitness",
+      "description": "Person who witnessed the assault",
+      "mens_rea_keywords": ["saw", "witnessed", "observed", "clear"],
+      "reliability_alpha": 6,
+      "reliability_beta": 3
+    },
+    {
+      "id": "treating_doctor",
+      "type": "expert",
+      "description": "Doctor who treated the victim",
+      "mens_rea_keywords": ["grievous", "dangerous", "intentional", "severe"],
+      "reliability_alpha": 9,
+      "reliability_beta": 1
+    },
+    {
+      "id": "police_officer",
+      "type": "expert",
+      "description": "Investigating officer",
+      "mens_rea_keywords": ["recovered", "arrested", "confession", "evidence"],
+      "reliability_alpha": 7,
+      "reliability_beta": 3
+    }
+  ],
+
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "min_argument_steps": 6,
+    "key_evidence": ["medical_report_injuries", "weapon_used"],
+    "key_witnesses": ["victim_survivor", "treating_doctor"]
+  },
+
+  "precedents": ["ILDC_2015_067", "ILDC_2017_134", "ILDC_2019_201", "ILDC_2021_078"],
+
+  "notes": "Level 1: Simple hurt (323). Level 2: Grievous hurt (325). Level 3-4: Attempt to murder (307) requires proving intention to kill, not just harm."
+}

@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2020_112",
+  "citation": "SEBI v. Rajesh Agarwal (2020) 11 SCC 345",
+  "template_category": "420_120B",
+  "ipc_sections": [420],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "forged_documents": 0.9,
+    "phone_records": 0.75,
+    "victim_statement": 0.85
+  },
+  "key_witnesses": ["victim", "document_expert"],
+  "reasoning_summary": "IPC 420 cheating proven through forged certificates and false promises to investors. Document expert confirmed signatures were fabricated. Victims testified about false assurances.",
+  "facts_established": {
+    "actus_reus": "False documents created and used to obtain money",
+    "mens_rea": "Knowledge of falsity, intention to deceive",
+    "chain_of_custody": "Documents seized from accused office"
+  },
+  "full_text_url": "https://ildc.in/cases/2020/112"
+}

@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2018_045",
+  "citation": "State of Rajasthan v. Habib Khan (2018) 4 SCC 789",
+  "template_category": "392_394_397",
+  "ipc_sections": [394],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "stolen_property_recovered": 0.9,
+    "weapon_robbery": 0.85,
+    "fingerprints_scene": 0.75
+  },
+  "key_witnesses": ["victim_robbery", "police_investigator"],
+  "reasoning_summary": "Conviction under IPC 394 for voluntarily causing hurt during robbery. Victim suffered injuries when accused snatched purse. Weapon used. Hurt + robbery = 394 not just 392.",
+  "facts_established": {
+    "actus_reus": "Robbery committed and hurt caused",
+    "mens_rea": "Intention to steal, knowledge that hurt may result",
+    "chain_of_custody": "Weapon and stolen property recovered"
+  },
+  "full_text_url": "https://ildc.in/cases/2018/045"
+}
