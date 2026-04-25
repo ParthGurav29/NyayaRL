@@ -5,10 +5,10 @@ Tests all endpoints: /health, /reset, /step
 
 Usage:
     # Start server first:
-    uvicorn nyayarl.server.app:app --reload --port 8000
+    uvicorn app:app --reload --port 8000
 
     # Then run tests:
-    python test_api.py
+    python tests/test_api.py
 """
 
 import requests
@@ -271,7 +271,7 @@ def main():
     except requests.exceptions.ConnectionError:
         print("\n" + "!" * 60)
         print("ERROR: Server is not running!")
-        print(f"Start server with: uvicorn nyayarl.server.app:app --reload --port 8000")
+        print(f"Start server with: uvicorn app:app --reload --port 8000")
         print("!" * 60 + "\n")
         return 1
 

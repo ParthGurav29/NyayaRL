@@ -1,3 +1,7 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from nyayarl.environment import NyayaRLEnvironment
 from nyayarl.agents.judge_agent import JudgeAgent
 from nyayarl.agents.prosecution_agent import ProsecutionAgent
