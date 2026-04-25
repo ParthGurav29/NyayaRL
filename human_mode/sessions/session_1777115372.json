@@ -1,0 +1,66 @@
+{
+  "started_at": 1777115372.413492,
+  "ended_at": 1777115372.413667,
+  "duration_sec": 0.00017499923706054688,
+  "checkpoint": "checkpoints/checkpoint_step_3.json",
+  "curriculum_level": 1,
+  "steps": [
+    {
+      "action": {
+        "step_type": "actus_reus",
+        "anchored_evidence_ids": [
+          "bloodstains"
+        ],
+        "anchored_witness_ids": [],
+        "cited_ipc_sections": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -0.5,
+        "failure_reason": "Evidence 'bloodstains' is not present (is_present=False)",
+        "prosecution_challenge": null
+      },
+      "done": false
+    },
+    {
+      "action": {
+        "step_type": "actus_reus",
+        "anchored_evidence_ids": [
+          "cctv_footage",
+          "autopsy_report",
+          "fingerprints"
+        ],
+        "anchored_witness_ids": [],
+        "cited_ipc_sections": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -0.5,
+        "failure_reason": "Evidence 'cctv_footage' must be PHYSICAL or FORENSIC for Actus Reus, got documentary",
+        "prosecution_challenge": null
+      },
+      "done": false
+    },
+    {
+      "action": {
+        "step_type": "actus_reus",
+        "anchored_evidence_ids": [
+          "fingerprints",
+          "cctv_footage"
+        ],
+        "anchored_witness_ids": [],
+        "cited_ipc_sections": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -0.5,
+        "failure_reason": "Evidence 'cctv_footage' must be PHYSICAL or FORENSIC for Actus Reus, got documentary",
+        "prosecution_challenge": null
+      },
+      "done": true
+    }
+  ]
+}

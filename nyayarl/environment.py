@@ -22,14 +22,14 @@ from nyayarl.models import (
     Verdict,
 )
 
-# ── Terminal reward placeholders (will be imported from scoring_rubric.py) ───
-
-_TERMINAL_PRECEDENT_MATCHED = 5.0
-_TERMINAL_PRECEDENT_UNMATCHED = -3.0
-_TERMINAL_EFFICIENCY_BONUS = 1.0
-_TERMINAL_PROSECUTION_PENALTY = -1.0
-_TERMINAL_STUCK_PENALTY = -5.0
-_TERMINAL_TIMEOUT_PENALTY = -5.0
+from rewards.scoring_rubric import (
+    TERMINAL_EFFICIENCY_BONUS,
+    TERMINAL_PRECEDENT_MATCHED,
+    TERMINAL_PRECEDENT_UNMATCHED,
+    TERMINAL_PROSECUTION_PENALTY,
+    TERMINAL_STUCK_PENALTY,
+    TERMINAL_TIMEOUT_PENALTY,
+)
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -61,6 +61,14 @@ class Judge(Protocol):
         submitted_steps: list[Action],
     ) -> Verdict: ...
 
+class Prosecution(Protocol):
+    """
+    Optional adversarial pressure: can propose a challenge string given current progress.
+    """
+
+    def propose_challenge(self, case_file: CaseFile, defence_chain_len: int) -> str | None: ...
+
+
 
 # ── Environment ──────────────────────────────────────────────────────────────
 
@@ -82,9 +90,11 @@ class NyayaRLEnvironment:
         self,
         case_generator: CaseGenerator,
         judge: Judge,
+        prosecution: Prosecution | None = None,
     ) -> None:
         self._case_generator = case_generator
         self._judge = judge
+        self._prosecution = prosecution
         self._validator = ArgumentChainValidator()
 
         # ── Episode state (all reset in reset()) ─────────────────────────
@@ -97,6 +107,8 @@ class NyayaRLEnvironment:
         self._curriculum_level: int = 1
         self._action_count: int = 0
         self._consecutive_invalid: int = 0
+        self._last_verdict: Verdict | None = None
+        self._last_termination: str | None = None
 
     # ── Public API ───────────────────────────────────────────────────────
 
@@ -116,6 +128,8 @@ class NyayaRLEnvironment:
         self._curriculum_level = curriculum_level
         self._action_count = 0
         self._consecutive_invalid = 0
+        self._last_verdict = None
+        self._last_termination = None
 
         return self._build_observation()
 
@@ -154,6 +168,17 @@ class NyayaRLEnvironment:
             self._prosecution_challenges.append(step_result.prosecution_challenge)
             self._prosecution_challenge_count += 1
 
+        # 4b. Optional Track 2 prosecution agent can add pressure after valid steps
+        if self._prosecution is not None and step_result.is_valid and not self._is_done:
+            assert self._case_file is not None
+            extra = self._prosecution.propose_challenge(
+                case_file=self._case_file,
+                defence_chain_len=len(self._submitted_steps),
+            )
+            if extra:
+                self._prosecution_challenges.append(extra)
+                self._prosecution_challenge_count += 1
+
         # 5. Accumulate reward
         self._total_reward += step_result.reward
 
@@ -162,6 +187,7 @@ class NyayaRLEnvironment:
 
         if termination is not None:
             self._is_done = True
+            self._last_termination = termination
 
             # 7. Apply terminal reward
             terminal_reward = self._compute_terminal_reward(termination)
@@ -170,6 +196,15 @@ class NyayaRLEnvironment:
         # 8–9. Build observation and return
         observation = self._build_observation()
         return observation, step_result, self._is_done
+
+    def get_total_reward(self) -> float:
+        return float(self._total_reward)
+
+    def get_last_verdict(self) -> Verdict | None:
+        return self._last_verdict
+
+    def get_last_termination(self) -> str | None:
+        return self._last_termination
 
     # ── Private — termination logic ──────────────────────────────────────
 
@@ -203,26 +238,27 @@ class NyayaRLEnvironment:
         assert self._case_file is not None
 
         if termination in ("stuck", "timeout"):
-            return _TERMINAL_STUCK_PENALTY if termination == "stuck" else _TERMINAL_TIMEOUT_PENALTY
+            return TERMINAL_STUCK_PENALTY if termination == "stuck" else TERMINAL_TIMEOUT_PENALTY
 
         # ── Success path — call the judge ────────────────────────────────
         verdict = self._judge.evaluate(self._case_file, self._submitted_steps)
+        self._last_verdict = verdict
 
         reward = 0.0
 
         # Precedent match bonus/penalty
         if verdict.precedent_matched:
-            reward += _TERMINAL_PRECEDENT_MATCHED
+            reward += TERMINAL_PRECEDENT_MATCHED
         else:
-            reward += _TERMINAL_PRECEDENT_UNMATCHED
+            reward += TERMINAL_PRECEDENT_UNMATCHED
 
         # Efficiency bonus: completed the chain with no wasted actions
         if self._action_count <= _MIN_VALID_PATH_LENGTH:
-            reward += _TERMINAL_EFFICIENCY_BONUS
+            reward += TERMINAL_EFFICIENCY_BONUS
 
         # Prosecution dominance penalty
         if verdict.prosecution_win_rate > 0.6:
-            reward += _TERMINAL_PROSECUTION_PENALTY
+            reward += TERMINAL_PROSECUTION_PENALTY
 
         return reward
 

@@ -6,7 +6,7 @@ in Indian criminal courts.
 """
 
 from nyayarl.precedents import PrecedentsDB
-from nyayarl.agents import JudgeAgent, ProsecutionAgent
+from nyayarl.agents import DefenceAgent, JudgeAgent, ProsecutionAgent
 
 __version__ = "0.1.0"
-__all__ = ["PrecedentsDB", "JudgeAgent", "ProsecutionAgent"]
+__all__ = ["PrecedentsDB", "JudgeAgent", "ProsecutionAgent", "DefenceAgent"]

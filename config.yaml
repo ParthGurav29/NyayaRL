@@ -1,0 +1,13 @@
+total_train_steps: 10000
+eval_every: 10
+eval_episodes: 2
+checkpoint_every: 3
+checkpoint_dir: checkpoints
+log_dir: logs
+G: 16
+lr: 0.05
+clip_epsilon: 0.2
+entropy_coef: 0.05
+window_size: 10
+promotion_threshold: 0.6
+

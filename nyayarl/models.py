@@ -86,6 +86,9 @@ class CaseFile:
     case_id: str
     fir: str
     accused_count: int
+    # Track 2 templates use a stable template_id like "302_304_homicide".
+    # Keeping it on the CaseFile lets prosecution + curriculum reason about difficulty.
+    template_id: str = ""
     evidence_items: list[EvidenceItem] = field(default_factory=list)
     witness_statements: list[WitnessStatement] = field(default_factory=list)
     applicable_ipc_sections: list[str] = field(default_factory=list)
