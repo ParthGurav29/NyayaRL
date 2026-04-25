@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2018_156",
+  "citation": "State of Rajasthan v. Mohan Lal (2018) 12 SCC 567",
+  "template_category": "498A_304B",
+  "ipc_sections": [498],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "injury_photographs": 0.85,
+    "panchnama": 0.8,
+    "medical_report_burns": 0.7
+  },
+  "key_witnesses": ["parents_of_deceased", "neighbor_domestic", "relative_witness"],
+  "reasoning_summary": "Conviction under IPC 498A for cruelty. Victim suffered sustained harassment and physical abuse. Multiple witnesses corroborated pattern of dowry demands and violence over several years.",
+  "facts_established": {
+    "actus_reus": "Sustained cruelty and harassment occurred",
+    "mens_rea": "Deliberate harassment for dowry",
+    "chain_of_custody": "Medical records show repeated injuries"
+  },
+  "full_text_url": "https://ildc.in/cases/2018/156"
+}

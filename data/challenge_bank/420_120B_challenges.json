@@ -1,0 +1,53 @@
+{
+  "template_id": "420_120B_fraud",
+  "challenges": [
+    {
+      "id": "challenge_420_1",
+      "text": "Documents alleged to be forged have not been conclusively proven as fake",
+      "targets_step": 1,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_420_2",
+      "text": "No evidence that accused had knowledge of forgery at the time of transaction",
+      "targets_step": 2,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_420_3",
+      "text": "Bank transactions are legitimate business dealings, not fraud",
+      "targets_step": 1,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_420_4",
+      "text": "Accuser turned approver has credibility issues due to plea bargain",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_420_5",
+      "text": "No proof of conspiracy - mere association does not prove 120B",
+      "targets_step": 3,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_420_6",
+      "text": "Dispute is civil in nature, not criminal cheating",
+      "targets_step": 5,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_420_7",
+      "text": "Phone records show normal business communication, not conspiracy",
+      "targets_step": 3,
+      "severity": "low"
+    },
+    {
+      "id": "challenge_420_8",
+      "text": "Accused also suffered financial loss - no fraudulent intent",
+      "targets_step": 2,
+      "severity": "medium"
+    }
+  ]
+}

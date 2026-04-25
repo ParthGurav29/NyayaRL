@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2020_089",
+  "citation": "State of UP v. Pappu Yadav (2020) 6 SCC 456",
+  "template_category": "392_394_397",
+  "ipc_sections": [397],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "weapon_robbery": 0.95,
+    "cctv_robbery": 0.9,
+    "stolen_property_recovered": 0.85
+  },
+  "key_witnesses": ["victim_robbery", "shopkeeper_witness"],
+  "reasoning_summary": "Conviction under IPC 397 for armed robbery. Accused used firearm during robbery. CCTV captured incident. Enhanced punishment for using deadly weapon during robbery.",
+  "facts_established": {
+    "actus_reus": "Armed robbery committed with firearm",
+    "mens_rea": "Intention to rob, armed with deadly weapon",
+    "chain_of_custody": "Firearm recovered, accused identified on CCTV"
+  },
+  "full_text_url": "https://ildc.in/cases/2020/089"
+}

@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2020_201",
+  "citation": "State of MP v. Sunita Bai (2020) 14 SCC 123",
+  "template_category": "498A_304B",
+  "ipc_sections": [304],
+  "judgment": "acquit",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "medical_report_burns": 0.8,
+    "panchnama": 0.6,
+    "injury_photographs": 0.5
+  },
+  "key_witnesses": ["parents_of_deceased", "neighbor_domestic"],
+  "reasoning_summary": "Acquittal as dying declaration was contradictory and medical evidence suggested accidental burns. Prosecution witnesses gave inconsistent testimony. Benefit of doubt given to accused.",
+  "facts_established": {
+    "actus_reus": "Death by burns but circumstances unclear",
+    "mens_rea": "Not proven - could be accident or suicide",
+    "chain_of_custody": "Weak - no direct evidence of abetment"
+  },
+  "full_text_url": "https://ildc.in/cases/2020/201"
+}

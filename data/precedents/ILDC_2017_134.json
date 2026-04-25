@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2017_134",
+  "citation": "State of Assam v. Dulal Chandra (2017) 8 SCC 234",
+  "template_category": "323_325_307",
+  "ipc_sections": [325],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "medical_report_injuries": 0.95,
+    "weapon_used": 0.9,
+    "cctv_assault": 0.6
+  },
+  "key_witnesses": ["treating_doctor", "bystander"],
+  "reasoning_summary": "Conviction under IPC 325 for causing grievous hurt. Medical evidence showed fractured bones and permanent disability. Weapon recovered. Grievous nature of injury elevated charge from 323 to 325.",
+  "facts_established": {
+    "actus_reus": "Accused caused grievous injury with weapon",
+    "mens_rea": "Intention to cause serious harm",
+    "chain_of_custody": "Weapon with fingerprints recovered"
+  },
+  "full_text_url": "https://ildc.in/cases/2017/134"
+}

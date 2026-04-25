@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2018_112",
+  "citation": "State of Karnataka v. Suresh Kumar (2018) 9 SCC 234",
+  "template_category": "302_304",
+  "ipc_sections": [302],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "bloodstains": 0.9,
+    "fingerprints": 0.85,
+    "autopsy_report": 0.95
+  },
+  "key_witnesses": ["eyewitness", "family_member"],
+  "reasoning_summary": "Conviction under IPC 302 upheld. Circumstantial evidence chain complete: bloodstains on accused clothing, fingerprints at scene, eyewitness saw accused fleeing. Motive established through family testimony about property dispute.",
+  "facts_established": {
+    "actus_reus": "Accused caused fatal injuries",
+    "mens_rea": "Property dispute created motive, threats made earlier",
+    "chain_of_custody": "Bloodstained clothes recovered from accused"
+  },
+  "full_text_url": "https://ildc.in/cases/2018/112"
+}

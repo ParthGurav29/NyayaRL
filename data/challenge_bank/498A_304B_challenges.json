@@ -1,0 +1,53 @@
+{
+  "template_id": "498A_304B_domestic",
+  "challenges": [
+    {
+      "id": "challenge_498_1",
+      "text": "Dying declaration was recorded after significant delay - possibility of tutoring",
+      "targets_step": 2,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_498_2",
+      "text": "Injuries could be accidental - kitchen fire accidents are common",
+      "targets_step": 1,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_498_3",
+      "text": "No independent witness to alleged cruelty or harassment",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_498_4",
+      "text": "Parents of deceased are interested witnesses - testimony biased",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_498_5",
+      "text": "Death occurred after 7 years of marriage - 304B presumption does not apply",
+      "targets_step": 5,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_498_6",
+      "text": "Victim had history of depression - suicide possibility not investigated",
+      "targets_step": 4,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_498_7",
+      "text": "Demand letters recovered but handwriting analysis not conducted",
+      "targets_step": 3,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_498_8",
+      "text": "Medical evidence shows burn pattern consistent with accident, not assault",
+      "targets_step": 1,
+      "severity": "high"
+    }
+  ]
+}

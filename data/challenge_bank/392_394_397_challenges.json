@@ -1,0 +1,53 @@
+{
+  "template_id": "392_394_397_robbery",
+  "challenges": [
+    {
+      "id": "challenge_392_1",
+      "text": "Identification parade conducted after undue delay - reliability questionable",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_392_2",
+      "text": "Stolen property not recovered from accused - possession not proven",
+      "targets_step": 3,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_392_3",
+      "text": "Victim testimony has material contradictions with FIR",
+      "targets_step": 2,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_392_4",
+      "text": "No evidence of force used - essential element of robbery missing",
+      "targets_step": 1,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_392_5",
+      "text": "Weapon allegedly used was common household item, not deadly weapon",
+      "targets_step": 3,
+      "severity": "low"
+    },
+    {
+      "id": "challenge_392_6",
+      "text": "Accused has credible alibi - was at different location during crime",
+      "targets_step": 4,
+      "severity": "high"
+    },
+    {
+      "id": "challenge_392_7",
+      "text": "CCTV footage is too unclear to positively identify perpetrators",
+      "targets_step": 3,
+      "severity": "medium"
+    },
+    {
+      "id": "challenge_392_8",
+      "text": "Fingerprints at scene could have been left during legitimate visit",
+      "targets_step": 3,
+      "severity": "low"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2021_003",
+  "citation": "State of UP v. Amit Srivastava (2021) 1 SCC 456",
+  "template_category": "420_120B",
+  "ipc_sections": [420, 120],
+  "judgment": "acquit",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "victim_statement": 0.6,
+    "phone_records": 0.5,
+    "bank_records": 0.4
+  },
+  "key_witnesses": ["victim"],
+  "reasoning_summary": "Acquittal as prosecution failed to prove criminal conspiracy. Bank records showed legitimate business transactions. No evidence of forged documents. Dispute was civil in nature, not criminal cheating.",
+  "facts_established": {
+    "actus_reus": "Business transaction occurred but fraud not proven",
+    "mens_rea": "No evidence of intention to cheat at time of promise",
+    "chain_of_custody": "Weak - no recovery of incriminating material"
+  },
+  "full_text_url": "https://ildc.in/cases/2021/003"
+}

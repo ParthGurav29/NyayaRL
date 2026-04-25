@@ -1,0 +1,21 @@
+{
+  "case_id": "ILDC_2019_201",
+  "citation": "State of Delhi v. Kishore Kumar (2019) 10 SCC 567",
+  "template_category": "323_325_307",
+  "ipc_sections": [307],
+  "judgment": "convict",
+  "min_argument_steps": 6,
+  "key_evidence_weights": {
+    "medical_report_injuries": 0.9,
+    "weapon_used": 0.95,
+    "cctv_assault": 0.85
+  },
+  "key_witnesses": ["victim_survivor", "treating_doctor", "bystander"],
+  "reasoning_summary": "Conviction under IPC 307 for attempt to murder. Multiple stab wounds in vital areas showed intention to kill. CCTV captured accused attacking victim. Doctor testified injuries were life-threatening.",
+  "facts_established": {
+    "actus_reus": "Accused stabbed victim in chest and abdomen",
+    "mens_rea": "Intention to kill proven - vital parts targeted",
+    "chain_of_custody": "Weapon recovered, accused identified on CCTV"
+  },
+  "full_text_url": "https://ildc.in/cases/2019/201"
+}
