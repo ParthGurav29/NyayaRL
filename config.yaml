@@ -1,0 +1,22 @@
+# NyayaRL Training Configuration
+# ─────────────────────────────────
+
+# Training loop
+total_train_steps: 10000
+eval_every: 5
+eval_episodes: 3
+checkpoint_every: 5
+
+# Paths
+checkpoint_dir: "checkpoints"
+log_dir: "logs"
+
+# GRPO
+G: 4
+lr: 0.001
+clip_epsilon: 0.2
+entropy_coef: 0.01
+
+# Curriculum
+window_size: 10
+promotion_threshold: 0.6
