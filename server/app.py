@@ -160,6 +160,10 @@ class StubJudge:
             prosecution_win_rate=0.0,
         )
 
+class StubProsecution:
+    def propose_challenge(self, case_file: CaseFile, defence_chain_len: int) -> str | None:
+        return None
+
 
 # ── App instance ─────────────────────────────────────────────────────────────
 
@@ -187,6 +191,7 @@ async def reset(body: ResetRequest) -> JSONResponse:
         environments[session_id] = NyayaRLEnvironment(
             case_generator=StubCaseGenerator(),
             judge=StubJudge(),
+            prosecution=StubProsecution(),
         )
     
     env = environments[session_id]

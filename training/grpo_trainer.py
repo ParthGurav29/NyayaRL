@@ -1,3 +1,4 @@
+
 """
 grpo_trainer.py — Group Relative Policy Optimisation for the defence agent.
 
@@ -57,7 +58,6 @@ class TransitionRecord:
     step_result: StepResult
     old_log_prob: float
 
-
 @dataclass
 class Rollout:
     """A complete episode trajectory with its total reward."""
@@ -73,6 +73,7 @@ class Rollout:
 
 class GRPOTrainer:
     """
+
     Group Relative Policy Optimisation trainer.
 
     For each training step:
@@ -327,4 +328,3 @@ class GRPOTrainer:
             "mean_advantage": mean_advantage,
             "policy_loss": total_policy_loss.item() if total_steps > 0 else 0.0,
             "entropy": mean_entropy,
-        }

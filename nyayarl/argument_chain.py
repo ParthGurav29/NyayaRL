@@ -18,6 +18,17 @@ from nyayarl.models import (
     StepType,
 )
 
+from rewards.scoring_rubric import (
+    PENALTY_CONTRADICTING_WITNESS,
+    PENALTY_EVIDENCE_NOT_PRESENT,
+    PENALTY_IPC_NOT_APPLICABLE,
+    PENALTY_MISSING_FOUNDATION,
+    PENALTY_SKIPPED_STEP,
+    PENALTY_UNNECESSARY_IPC,
+    REWARD_PROACTIVE_COUNTER,
+    REWARD_VALID_STEP,
+)
+
 # ── Canonical step ordering ──────────────────────────────────────────────────
 
 _STEP_ORDER: list[StepType] = [
@@ -29,16 +40,7 @@ _STEP_ORDER: list[StepType] = [
     StepType.PRECEDENT_CITATION,
 ]
 
-# ── Hardcoded reward values (will be imported from scoring_rubric.py later) ─
-
-_REWARD_VALID_STEP = 1.0
-_REWARD_PROACTIVE_COUNTER = 1.5
-_PENALTY_MISSING_FOUNDATION = -1.0
-_PENALTY_EVIDENCE_NOT_PRESENT = -0.5
-_PENALTY_IPC_NOT_APPLICABLE = -0.75
-_PENALTY_SKIPPED_STEP = -1.0
-_PENALTY_CONTRADICTING_WITNESS = -0.25
-_PENALTY_UNNECESSARY_IPC = -0.1
+# Reward values come from rewards/scoring_rubric.py
 
 
 class ArgumentChainValidator:
@@ -72,7 +74,7 @@ class ArgumentChainValidator:
         if expected_index >= len(_STEP_ORDER):
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_SKIPPED_STEP,
+                reward=PENALTY_SKIPPED_STEP,
                 failure_reason="All 6 steps already submitted",
             )
 
@@ -108,7 +110,7 @@ class ArgumentChainValidator:
         if not action.anchored_evidence_ids:
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                reward=PENALTY_EVIDENCE_NOT_PRESENT,
                 failure_reason="Actus Reus requires at least one anchored evidence ID",
             )
 
@@ -119,7 +121,7 @@ class ArgumentChainValidator:
             if eid not in evidence_map:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                    reward=PENALTY_EVIDENCE_NOT_PRESENT,
                     failure_reason=f"Evidence ID '{eid}' not found in case file",
                 )
             item = evidence_map[eid]
@@ -127,21 +129,21 @@ class ArgumentChainValidator:
             if not item.is_present:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                    reward=PENALTY_EVIDENCE_NOT_PRESENT,
                     failure_reason=f"Evidence '{eid}' is not present (is_present=False)",
                 )
             # Type must be PHYSICAL or FORENSIC
             if item.type not in (EvidenceType.PHYSICAL, EvidenceType.FORENSIC):
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                    reward=PENALTY_EVIDENCE_NOT_PRESENT,
                     failure_reason=(
                         f"Evidence '{eid}' must be PHYSICAL or FORENSIC for "
                         f"Actus Reus, got {item.type.value}"
                     ),
                 )
 
-        return StepResult(is_valid=True, reward=_REWARD_VALID_STEP)
+        return StepResult(is_valid=True, reward=REWARD_VALID_STEP)
 
     def _validate_mens_rea(
         self,
@@ -159,7 +161,7 @@ class ArgumentChainValidator:
         if not action.anchored_witness_ids:
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_MISSING_FOUNDATION,
+                reward=PENALTY_MISSING_FOUNDATION,
                 failure_reason="Mens Rea requires at least one anchored witness ID",
             )
 
@@ -171,7 +173,7 @@ class ArgumentChainValidator:
             if wid not in witness_map:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_MISSING_FOUNDATION,
+                    reward=PENALTY_MISSING_FOUNDATION,
                     failure_reason=f"Witness ID '{wid}' not found in case file",
                 )
             witness = witness_map[wid]
@@ -179,7 +181,7 @@ class ArgumentChainValidator:
             if witness.reliability <= 0.5:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_MISSING_FOUNDATION,
+                    reward=PENALTY_MISSING_FOUNDATION,
                     failure_reason=(
                         f"Witness '{wid}' reliability is {witness.reliability}, "
                         f"must be above 0.5"
@@ -188,10 +190,10 @@ class ArgumentChainValidator:
             if witness.is_contradicting:
                 has_contradicting = True
 
-        reward = _REWARD_VALID_STEP
+        reward = REWARD_VALID_STEP
         prosecution_challenge = None
         if has_contradicting:
-            reward += _PENALTY_CONTRADICTING_WITNESS
+            reward += PENALTY_CONTRADICTING_WITNESS
             prosecution_challenge = (
                 "Prosecution challenge: contradicting witness cited — "
                 "credibility of testimony is disputed"
@@ -219,7 +221,7 @@ class ArgumentChainValidator:
         if not action.anchored_evidence_ids:
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                reward=PENALTY_EVIDENCE_NOT_PRESENT,
                 failure_reason=(
                     "Linkage requires at least one anchored evidence ID "
                     "(DOCUMENTARY or FORENSIC)"
@@ -232,14 +234,14 @@ class ArgumentChainValidator:
             if eid not in evidence_map:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                    reward=PENALTY_EVIDENCE_NOT_PRESENT,
                     failure_reason=f"Evidence ID '{eid}' not found in case file",
                 )
             item = evidence_map[eid]
             if item.type not in (EvidenceType.DOCUMENTARY, EvidenceType.FORENSIC):
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                    reward=PENALTY_EVIDENCE_NOT_PRESENT,
                     failure_reason=(
                         f"Evidence '{eid}' must be DOCUMENTARY or FORENSIC for "
                         f"Linkage, got {item.type.value}"
@@ -250,7 +252,7 @@ class ArgumentChainValidator:
         if not action.cited_ipc_sections:
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_IPC_NOT_APPLICABLE,
+                reward=PENALTY_IPC_NOT_APPLICABLE,
                 failure_reason="Linkage requires at least one cited IPC section",
             )
 
@@ -259,14 +261,14 @@ class ArgumentChainValidator:
             if section not in case_file.applicable_ipc_sections:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_IPC_NOT_APPLICABLE,
+                    reward=PENALTY_IPC_NOT_APPLICABLE,
                     failure_reason=(
                         f"IPC section '{section}' is not in the case file's "
                         f"applicable sections"
                     ),
                 )
 
-        return StepResult(is_valid=True, reward=_REWARD_VALID_STEP)
+        return StepResult(is_valid=True, reward=REWARD_VALID_STEP)
 
     def _validate_counter_argument(
         self,
@@ -284,7 +286,7 @@ class ArgumentChainValidator:
         if not action.anchored_witness_ids and not action.anchored_evidence_ids:
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_MISSING_FOUNDATION,
+                reward=PENALTY_MISSING_FOUNDATION,
                 failure_reason=(
                     "Counter Argument requires at least one anchored witness ID "
                     "or evidence ID"
@@ -297,7 +299,7 @@ class ArgumentChainValidator:
             if eid not in evidence_ids:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_EVIDENCE_NOT_PRESENT,
+                    reward=PENALTY_EVIDENCE_NOT_PRESENT,
                     failure_reason=f"Evidence ID '{eid}' not found in case file",
                 )
 
@@ -307,7 +309,7 @@ class ArgumentChainValidator:
             if wid not in witness_ids:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_MISSING_FOUNDATION,
+                    reward=PENALTY_MISSING_FOUNDATION,
                     failure_reason=f"Witness ID '{wid}' not found in case file",
                 )
 
@@ -317,7 +319,7 @@ class ArgumentChainValidator:
         # prior StepResult attached a prosecution_challenge — but since we
         # only have submitted Actions (not StepResults) here, the bonus is
         # awarded unconditionally.  (The environment can refine this later.)
-        return StepResult(is_valid=True, reward=_REWARD_PROACTIVE_COUNTER)
+        return StepResult(is_valid=True, reward=REWARD_PROACTIVE_COUNTER)
 
     def _validate_ipc_application(
         self,
@@ -335,7 +337,7 @@ class ArgumentChainValidator:
         if not action.cited_ipc_sections:
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_IPC_NOT_APPLICABLE,
+                reward=PENALTY_IPC_NOT_APPLICABLE,
                 failure_reason="IPC Application requires at least one cited IPC section",
             )
 
@@ -344,7 +346,7 @@ class ArgumentChainValidator:
             if section not in case_file.applicable_ipc_sections:
                 return StepResult(
                     is_valid=False,
-                    reward=_PENALTY_IPC_NOT_APPLICABLE,
+                    reward=PENALTY_IPC_NOT_APPLICABLE,
                     failure_reason=(
                         f"IPC section '{section}' is not in the case file's "
                         f"applicable sections"
@@ -356,8 +358,8 @@ class ArgumentChainValidator:
         unnecessary = [
             s for s in action.cited_ipc_sections if s not in grounded_sections
         ]
-        penalty = len(unnecessary) * _PENALTY_UNNECESSARY_IPC
-        reward = _REWARD_VALID_STEP + penalty
+        penalty = len(unnecessary) * PENALTY_UNNECESSARY_IPC
+        reward = REWARD_VALID_STEP + penalty
 
         challenge = None
         if unnecessary:
@@ -389,7 +391,7 @@ class ArgumentChainValidator:
         if action.judgment is None:
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_MISSING_FOUNDATION,
+                reward=PENALTY_MISSING_FOUNDATION,
                 failure_reason="Precedent Citation requires a judgment (acquit/convict/partial)",
             )
 
@@ -397,24 +399,17 @@ class ArgumentChainValidator:
         if not isinstance(action.judgment, JudgmentLabel):
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_MISSING_FOUNDATION,
+                reward=PENALTY_MISSING_FOUNDATION,
                 failure_reason=(
                     f"judgment must be a JudgmentLabel, got {type(action.judgment).__name__}"
                 ),
             )
 
-        # Anchored evidence IDs should reference the precedent
-        if case_file.precedent_id and case_file.precedent_id not in action.anchored_evidence_ids:
-            return StepResult(
-                is_valid=False,
-                reward=_PENALTY_EVIDENCE_NOT_PRESENT,
-                failure_reason=(
-                    f"Precedent Citation must anchor the case precedent ID "
-                    f"'{case_file.precedent_id}'"
-                ),
-            )
+        # Track 1's Action schema does not have a dedicated precedent-id field.
+        # The environment + judge evaluate precedent match at episode end; here we
+        # only require that the agent finalises a judgment to terminate the chain.
 
-        return StepResult(is_valid=True, reward=_REWARD_VALID_STEP)
+        return StepResult(is_valid=True, reward=REWARD_VALID_STEP)
 
     # ── Private — shared helpers ─────────────────────────────────────────
 
@@ -432,7 +427,7 @@ class ArgumentChainValidator:
             missing_step = _STEP_ORDER[len(submitted_steps)]
             return StepResult(
                 is_valid=False,
-                reward=_PENALTY_SKIPPED_STEP,
+                reward=PENALTY_SKIPPED_STEP,
                 failure_reason=(
                     f"Step {len(submitted_steps) + 1} "
                     f"({missing_step.value}) required before this step"

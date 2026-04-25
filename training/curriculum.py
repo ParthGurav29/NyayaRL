@@ -7,9 +7,11 @@ results and decides when to promote to the next difficulty level.
 No environment calls, no agent calls, no training logic — pure bookkeeper.
 """
 
+
 from __future__ import annotations
 
 from collections import deque
+
 
 # ── Difficulty parameters per level ──────────────────────────────────────────
 
@@ -61,6 +63,7 @@ class CurriculumManager:
         cm.record_episode(judgment_matched=True, curriculum_level=1)
         if cm.should_promote():
             new_level = cm.promote()
+
     """
 
     def __init__(
