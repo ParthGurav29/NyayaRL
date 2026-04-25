@@ -2,7 +2,7 @@
 # ─────────────────────────────────
 
 # Training loop
-total_train_steps: 10
+total_train_steps: 10000
 eval_every: 5
 eval_episodes: 3
 checkpoint_every: 5
@@ -18,5 +18,5 @@ clip_epsilon: 0.2
 entropy_coef: 0.01
 
 # Curriculum
-window_size: 8
-promotion_threshold: 0.8
+window_size: 10
+promotion_threshold: 0.6
