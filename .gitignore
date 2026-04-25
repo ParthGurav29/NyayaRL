@@ -3,3 +3,6 @@ __pycache__/
 .env
 logs/
 checkpoints/
+human_mode/sessions/
+venv/
+*.pt
