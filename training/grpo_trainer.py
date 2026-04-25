@@ -66,6 +66,7 @@ class Rollout:
     total_reward: float = 0.0
     reached_step_6: bool = False
     prosecution_win_rate: float = 0.0
+    returns_to_go: list[float] = field(default_factory=list)
 
 
 # ── GRPO Trainer ────────────────────────────────────────────────────────────
@@ -95,14 +96,27 @@ class GRPOTrainer:
         lr: float = 1e-4,
         clip_epsilon: float = 0.2,
         entropy_coef: float = 0.01,
+        entropy_coef_final: float | None = None,
+        entropy_anneal_steps: int = 0,
         max_grad_norm: float = 1.0,
+        advantage_clip: float | None = 5.0,
+        min_reward_std: float = 1e-3,
     ) -> None:
         self._agent = defence_agent
         self._env = environment
         self._G = G
         self._clip_epsilon = clip_epsilon
-        self._entropy_coef = entropy_coef
+        self._entropy_coef_start = float(entropy_coef)
+        self._entropy_coef_final = (
+            float(entropy_coef_final)
+            if entropy_coef_final is not None
+            else float(entropy_coef)
+        )
+        self._entropy_anneal_steps = int(entropy_anneal_steps or 0)
+        self._entropy_coef = float(entropy_coef)
         self._max_grad_norm = max_grad_norm
+        self._advantage_clip = advantage_clip
+        self._min_reward_std = float(min_reward_std)
 
         self._optimiser = torch.optim.Adam(
             self._agent.parameters(), lr=lr
@@ -111,16 +125,23 @@ class GRPOTrainer:
 
     # ── Public API ───────────────────────────────────────────────────────
 
-    def train_step(self, curriculum_level: int) -> dict[str, float]:
+    def train_step(
+        self, curriculum_level: int, *, global_step: int | None = None
+    ) -> dict[str, float]:
         """
         Single GRPO training iteration.
 
         Collects G rollouts → computes group advantages → updates policy.
         Returns a dict of training metrics.
         """
+        if global_step is not None:
+            self._set_entropy_coef(global_step)
+
         rollouts = self.collect_group_rollouts(curriculum_level)
         self._last_rollouts = rollouts
-        advantages = self.compute_advantages(rollouts)
+        advantages = self.compute_step_advantages(
+            rollouts, min_reward_std=self._min_reward_std
+        )
         metrics = self.update_policy(rollouts, advantages)
 
         # Append extra metrics
@@ -194,6 +215,13 @@ class GRPOTrainer:
             total_reward += step_result.reward
             observation = next_observation
 
+        returns_to_go: list[float] = []
+        running = 0.0
+        for record in reversed(trajectory):
+            running += float(record.step_result.reward)
+            returns_to_go.append(running)
+        returns_to_go.reverse()
+
         # Determine if the episode completed successfully (all 6 valid steps)
         valid_steps = sum(
             1 for t in trajectory if t.step_result.is_valid
@@ -214,35 +242,58 @@ class GRPOTrainer:
             total_reward=total_reward,
             reached_step_6=reached_step_6,
             prosecution_win_rate=prosecution_win_rate,
+            returns_to_go=returns_to_go,
         )
 
     # ── Advantage computation ────────────────────────────────────────────
 
     @staticmethod
-    def compute_advantages(rollouts: list[Rollout]) -> list[float]:
+    def compute_step_advantages(
+        rollouts: list[Rollout],
+        *,
+        min_reward_std: float = 1e-3,
+    ) -> list[list[float]]:
         """
-        Group-normalise rewards across the G rollouts.
+        Compute group-normalised advantages per timestep using returns-to-go.
 
-        Returns ``(r - mean) / (std + 1e-8)`` for each rollout.
+        For each timestep index t, normalise return-to-go across rollouts:
+          A_t = (R_t - mean(R_t)) / max(std(R_t), min_reward_std)
         """
-        rewards = [r.total_reward for r in rollouts]
-        n = len(rewards)
-
-        if n == 0:
+        if not rollouts:
             return []
 
-        mean_r = sum(rewards) / n
-        var_r = sum((r - mean_r) ** 2 for r in rewards) / n
-        std_r = math.sqrt(var_r)
+        max_len = max((len(r.returns_to_go) for r in rollouts), default=0)
+        if max_len == 0:
+            return [[] for _ in rollouts]
 
-        return [(r - mean_r) / (std_r + 1e-8) for r in rewards]
+        means: list[float] = []
+        stds: list[float] = []
+        for t in range(max_len):
+            vals = [r.returns_to_go[t] for r in rollouts if t < len(r.returns_to_go)]
+            if not vals:
+                means.append(0.0)
+                stds.append(1.0)
+                continue
+            m = sum(vals) / len(vals)
+            v = sum((x - m) ** 2 for x in vals) / len(vals)
+            s = math.sqrt(v)
+            means.append(m)
+            stds.append(max(float(min_reward_std), float(s)))
+
+        out: list[list[float]] = []
+        for r in rollouts:
+            a: list[float] = []
+            for t, rtg in enumerate(r.returns_to_go):
+                a.append((rtg - means[t]) / stds[t])
+            out.append(a)
+        return out
 
     # ── Policy update ────────────────────────────────────────────────────
 
     def update_policy(
         self,
         rollouts: list[Rollout],
-        advantages: list[float],
+        advantages: list[list[float]],
     ) -> dict[str, float]:
         """
         Compute and apply the GRPO gradient step.
@@ -256,11 +307,18 @@ class GRPOTrainer:
         total_policy_loss = torch.tensor(0.0)
         total_entropy = torch.tensor(0.0)
         total_steps = 0
+        adv_values_for_metrics: list[float] = []
 
-        for rollout, advantage in zip(rollouts, advantages):
-            adv_tensor = torch.tensor(advantage, dtype=torch.float32)
-
-            for record in rollout.trajectory:
+        for rollout, adv_list in zip(rollouts, advantages):
+            for t, record in enumerate(rollout.trajectory):
+                advantage = float(adv_list[t]) if t < len(adv_list) else 0.0
+                if self._advantage_clip is not None:
+                    advantage = max(
+                        -float(self._advantage_clip),
+                        min(float(self._advantage_clip), advantage),
+                    )
+                adv_values_for_metrics.append(advantage)
+                adv_tensor = torch.tensor(advantage, dtype=torch.float32)
                 # Current log prob (in the computation graph)
                 log_prob = self._agent.get_log_prob(
                     record.observation, record.action
@@ -319,12 +377,26 @@ class GRPOTrainer:
             else 0.0
         )
         mean_advantage = (
-            sum(advantages) / len(advantages) if advantages else 0.0
+            sum(adv_values_for_metrics) / len(adv_values_for_metrics)
+            if adv_values_for_metrics
+            else 0.0
         )
+        min_advantage = min(adv_values_for_metrics) if adv_values_for_metrics else 0.0
+        max_advantage = max(adv_values_for_metrics) if adv_values_for_metrics else 0.0
 
         return {
             "mean_reward": mean_reward,
             "std_reward": std_reward,
             "mean_advantage": mean_advantage,
+            "min_advantage": min_advantage,
+            "max_advantage": max_advantage,
             "policy_loss": total_policy_loss.item() if total_steps > 0 else 0.0,
             "entropy": mean_entropy,
+        }
+
+    def _set_entropy_coef(self, global_step: int) -> None:
+        if self._entropy_anneal_steps <= 0:
+            self._entropy_coef = self._entropy_coef_start
+            return
+        t = max(0.0, min(1.0, float(global_step) / float(self._entropy_anneal_steps)))
+        self._entropy_coef = (1.0 - t) * self._entropy_coef_start + t * self._entropy_coef_final

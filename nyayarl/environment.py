@@ -153,7 +153,10 @@ class NyayaRLEnvironment:
 
         # 2. Validate the action
         step_result = self._validator.validate(
-            action, self._case_file, self._submitted_steps
+            action,
+            self._case_file,
+            self._submitted_steps,
+            prosecution_challenges_so_far=list(self._prosecution_challenges),
         )
 
         # 3. If valid, append to submitted steps
@@ -191,6 +194,9 @@ class NyayaRLEnvironment:
 
             # 7. Apply terminal reward
             terminal_reward = self._compute_terminal_reward(termination)
+            # Make terminal reward visible to training by attaching it to the
+            # final StepResult (so rollout reward sums reflect the true objective).
+            step_result.reward += terminal_reward
             self._total_reward += terminal_reward
 
         # 8–9. Build observation and return

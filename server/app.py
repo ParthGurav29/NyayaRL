@@ -16,16 +16,12 @@ from pydantic import BaseModel, Field
 
 # Imports from nyayarl core logic
 from nyayarl.environment import NyayaRLEnvironment
-from nyayarl.models import (
-    Action,
-    CaseFile,
-    EvidenceItem,
-    EvidenceType,
-    JudgmentLabel,
-    StepType,
-    Verdict,
-    WitnessStatement,
-)
+from nyayarl.models import Action, JudgmentLabel, StepType
+
+from nyayarl.agents import JudgeAgent, ProsecutionAgent
+from nyayarl.case_generator import Track2CaseGenerator
+from nyayarl.precedents import PrecedentsDB
+from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
 
 # ── Global State ─────────────────────────────────────────────────────────────
 
@@ -102,67 +98,21 @@ def _parse_action(body: ActionRequest) -> Action:
     )
 
 
-# ── Stub dependencies ────────────────────────────────────────────────────────
+# ── Shared Track2-backed dependencies ───────────────────────────────────────
 
-class StubCaseGenerator:
-    """Generates a minimal but structurally valid case file."""
-    def generate(self, curriculum_level: int) -> CaseFile:
-        return CaseFile(
-            case_id=f"STUB_{curriculum_level:03d}",
-            fir="[Stub FIR] Placeholder first information report.",
-            accused_count=1,
-            evidence_items=[
-                EvidenceItem(
-                    id="E1",
-                    description="Physical evidence (stub)",
-                    type=EvidenceType.PHYSICAL,
-                    is_present=True,
-                ),
-                EvidenceItem(
-                    id="E2",
-                    description="Forensic evidence (stub)",
-                    type=EvidenceType.FORENSIC,
-                    is_present=True,
-                ),
-                EvidenceItem(
-                    id="E3",
-                    description="Documentary evidence (stub)",
-                    type=EvidenceType.DOCUMENTARY,
-                    is_present=True,
-                ),
-            ],
-            witness_statements=[
-                WitnessStatement(
-                    id="W1",
-                    content="Witness statement (stub)",
-                    reliability=0.85,
-                    is_contradicting=False,
-                ),
-            ],
-            applicable_ipc_sections=["302", "307", "34"],
-            curriculum_level=curriculum_level,
-            precedent_id="ILDC_STUB_001",
-        )
+_precedents = PrecedentsDB()
+_judge = Track2JudgeAdapter(JudgeAgent(), _precedents)
+_prosecution = Track2ProsecutionAdapter(ProsecutionAgent())
 
 
-class StubJudge:
-    """Returns a placeholder verdict."""
-    def evaluate(
-        self,
-        case_file: CaseFile,
-        submitted_steps: list[Action],
-    ) -> Verdict:
-        return Verdict(
-            judgment=submitted_steps[-1].judgment or JudgmentLabel.PARTIAL,
-            matched_precedent_id=case_file.precedent_id,
-            precedent_matched=True,
-            total_reward=0.0,
-            prosecution_win_rate=0.0,
-        )
-
-class StubProsecution:
-    def propose_challenge(self, case_file: CaseFile, defence_chain_len: int) -> str | None:
-        return None
+def _new_environment() -> NyayaRLEnvironment:
+    # Per-session generator to avoid shared RNG state between users.
+    case_generator = Track2CaseGenerator()
+    return NyayaRLEnvironment(
+        case_generator=case_generator,
+        judge=_judge,
+        prosecution=_prosecution,
+    )
 
 
 # ── App instance ─────────────────────────────────────────────────────────────
@@ -178,7 +128,11 @@ app = FastAPI(
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Liveness check for Docker and deployment."""
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "precedents_loaded": str(len(_precedents.get_all_case_ids())),
+        "sessions": str(len(environments)),
+    }
 
 
 @app.post("/reset")
@@ -188,11 +142,7 @@ async def reset(body: ResetRequest) -> JSONResponse:
     
     # Initialize a new environment if this session doesn't exist
     if session_id not in environments:
-        environments[session_id] = NyayaRLEnvironment(
-            case_generator=StubCaseGenerator(),
-            judge=StubJudge(),
-            prosecution=StubProsecution(),
-        )
+        environments[session_id] = _new_environment()
     
     env = environments[session_id]
     

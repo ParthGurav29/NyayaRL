@@ -60,6 +60,7 @@ class ArgumentChainValidator:
         action: Action,
         case_file: CaseFile,
         submitted_steps: list[Action],
+        prosecution_challenges_so_far: list[str] | None = None,
     ) -> StepResult:
         """
         Validate *action* against *case_file* and *submitted_steps*.
@@ -91,7 +92,12 @@ class ArgumentChainValidator:
             StepType.ACTUS_REUS: self._validate_actus_reus,
             StepType.MENS_REA: self._validate_mens_rea,
             StepType.LINKAGE: self._validate_linkage,
-            StepType.COUNTER_ARGUMENT: self._validate_counter_argument,
+            StepType.COUNTER_ARGUMENT: lambda a, c, s: self._validate_counter_argument(
+                a,
+                c,
+                s,
+                prosecution_challenges_so_far=prosecution_challenges_so_far or [],
+            ),
             StepType.IPC_APPLICATION: self._validate_ipc_application,
             StepType.PRECEDENT_CITATION: self._validate_precedent_citation,
         }
@@ -217,14 +223,14 @@ class ArgumentChainValidator:
         if result is not None:
             return result
 
-        # Must anchor at least one evidence ID of type DOCUMENTARY or FORENSIC
+        # Must anchor at least one evidence ID of type DOCUMENTARY / DIGITAL or FORENSIC
         if not action.anchored_evidence_ids:
             return StepResult(
                 is_valid=False,
                 reward=PENALTY_EVIDENCE_NOT_PRESENT,
                 failure_reason=(
                     "Linkage requires at least one anchored evidence ID "
-                    "(DOCUMENTARY or FORENSIC)"
+                    "(DOCUMENTARY, DIGITAL or FORENSIC)"
                 ),
             )
 
@@ -238,12 +244,22 @@ class ArgumentChainValidator:
                     failure_reason=f"Evidence ID '{eid}' not found in case file",
                 )
             item = evidence_map[eid]
-            if item.type not in (EvidenceType.DOCUMENTARY, EvidenceType.FORENSIC):
+            if not item.is_present:
+                return StepResult(
+                    is_valid=False,
+                    reward=PENALTY_EVIDENCE_NOT_PRESENT,
+                    failure_reason=f"Evidence '{eid}' is not present (is_present=False)",
+                )
+            if item.type not in (
+                EvidenceType.DOCUMENTARY,
+                EvidenceType.DIGITAL,
+                EvidenceType.FORENSIC,
+            ):
                 return StepResult(
                     is_valid=False,
                     reward=PENALTY_EVIDENCE_NOT_PRESENT,
                     failure_reason=(
-                        f"Evidence '{eid}' must be DOCUMENTARY or FORENSIC for "
+                        f"Evidence '{eid}' must be DOCUMENTARY, DIGITAL or FORENSIC for "
                         f"Linkage, got {item.type.value}"
                     ),
                 )
@@ -275,6 +291,8 @@ class ArgumentChainValidator:
         action: Action,
         case_file: CaseFile,
         submitted_steps: list[Action],
+        *,
+        prosecution_challenges_so_far: list[str],
     ) -> StepResult:
         """Step 4 — Counter Argument."""
         # Steps 1, 2, 3 must exist
@@ -313,13 +331,14 @@ class ArgumentChainValidator:
                     failure_reason=f"Witness ID '{wid}' not found in case file",
                 )
 
-        # Proactive counter-argument bonus: if the agent gets here before
-        # any prosecution challenge has been raised in prior steps, reward
-        # the proactive defence.  We detect this by checking whether any
-        # prior StepResult attached a prosecution_challenge — but since we
-        # only have submitted Actions (not StepResults) here, the bonus is
-        # awarded unconditionally.  (The environment can refine this later.)
-        return StepResult(is_valid=True, reward=REWARD_PROACTIVE_COUNTER)
+        # Proactive counter-argument bonus is ONLY awarded if no prosecution
+        # challenges have been raised so far in the episode.
+        reward = (
+            REWARD_PROACTIVE_COUNTER
+            if not prosecution_challenges_so_far
+            else REWARD_VALID_STEP
+        )
+        return StepResult(is_valid=True, reward=reward)
 
     def _validate_ipc_application(
         self,

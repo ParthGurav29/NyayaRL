@@ -62,10 +62,10 @@ class DefenceAgent(nn.Module):
                 if w.reliability > 0.5
             ]
         elif step_type == StepType.LINKAGE:
-            # Step 3: only DOCUMENTARY and FORENSIC evidence that is present
+            # Step 3: only DOCUMENTARY / DIGITAL and FORENSIC evidence that is present
             valid_evidence_ids = [
                 e.id for e in case.evidence_items
-                if e.is_present and e.type in (EvidenceType.DOCUMENTARY, EvidenceType.FORENSIC)
+                if e.is_present and e.type in (EvidenceType.DOCUMENTARY, EvidenceType.DIGITAL, EvidenceType.FORENSIC)
             ]
             valid_ipc = list(case.applicable_ipc_sections)
         elif step_type == StepType.COUNTER_ARGUMENT:
@@ -123,6 +123,33 @@ class DefenceAgent(nn.Module):
             logp = logp + dist.log_prob(torch.tensor(idx, dtype=torch.int64))
         return logp
 
+    def get_entropy(self, observation: Observation) -> torch.Tensor:
+        """
+        Differentiable entropy of the trainable parts of the policy.
+
+        We model only the discrete count distributions + judgment distribution.
+        """
+        step_idx = len(observation.submitted_steps)
+        step_type = [
+            StepType.ACTUS_REUS,
+            StepType.MENS_REA,
+            StepType.LINKAGE,
+            StepType.COUNTER_ARGUMENT,
+            StepType.IPC_APPLICATION,
+            StepType.PRECEDENT_CITATION,
+        ][min(step_idx, 5)]
+
+        # Count distributions are always present (but may be masked by max_k=0).
+        ent = torch.tensor(0.0, dtype=torch.float32)
+        ent = ent + self._entropy_count(self.evidence_count_logits, max_k=3)
+        ent = ent + self._entropy_count(self.witness_count_logits, max_k=3)
+        ent = ent + self._entropy_count(self.ipc_count_logits, max_k=3)
+
+        if step_type == StepType.PRECEDENT_CITATION:
+            ent = ent + torch.distributions.Categorical(logits=self.judgment_logits).entropy()
+
+        return ent
+
     def state_dict(self) -> dict[str, Any]:
         return {
             "evidence_count_logits": self.evidence_count_logits.detach().cpu().tolist(),
@@ -162,4 +189,8 @@ class DefenceAgent(nn.Module):
         dist = torch.distributions.Categorical(logits=self.judgment_logits)
         idx = int(dist.sample().item())
         return order[max(0, min(idx, 2))]
+
+    def _entropy_count(self, logits: torch.Tensor, *, max_k: int) -> torch.Tensor:
+        dist = torch.distributions.Categorical(logits=logits[: max_k + 1])
+        return dist.entropy()
 

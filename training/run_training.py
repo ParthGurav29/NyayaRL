@@ -1,4 +1,3 @@
-
 """
 run_training.py — Entry point for the NyayaRL training pipeline.
 
@@ -32,13 +31,13 @@ from nyayarl.models import (
     Verdict,
     WitnessStatement,
 )
+from nyayarl.agents import DefenceAgent
 from training.curriculum import CurriculumManager
 from training.grpo_trainer import GRPOTrainer
 
 # ── Required config keys ────────────────────────────────────────────────────
 
 _REQUIRED_CONFIG_KEYS = [
-
     "total_train_steps",
     "eval_every",
     "eval_episodes",
@@ -52,7 +51,6 @@ _REQUIRED_CONFIG_KEYS = [
     "window_size",
     "promotion_threshold",
 ]
-
 
 
 # ── Config loading + validation ─────────────────────────────────────────────
@@ -101,12 +99,32 @@ class StubCaseGenerator:
             fir="[Stub FIR] Placeholder first information report.",
             accused_count=1,
             evidence_items=[
-                EvidenceItem(id="E1", description="Physical evidence", type=EvidenceType.PHYSICAL, is_present=True),
-                EvidenceItem(id="E2", description="Forensic evidence", type=EvidenceType.FORENSIC, is_present=True),
-                EvidenceItem(id="E3", description="Documentary evidence", type=EvidenceType.DOCUMENTARY, is_present=True),
+                EvidenceItem(
+                    id="E1",
+                    description="Physical evidence",
+                    type=EvidenceType.PHYSICAL,
+                    is_present=True,
+                ),
+                EvidenceItem(
+                    id="E2",
+                    description="Forensic evidence",
+                    type=EvidenceType.FORENSIC,
+                    is_present=True,
+                ),
+                EvidenceItem(
+                    id="E3",
+                    description="Documentary evidence",
+                    type=EvidenceType.DOCUMENTARY,
+                    is_present=True,
+                ),
             ],
             witness_statements=[
-                WitnessStatement(id="W1", content="Witness statement", reliability=0.85, is_contradicting=False),
+                WitnessStatement(
+                    id="W1",
+                    content="Witness statement",
+                    reliability=0.85,
+                    is_contradicting=False,
+                ),
             ],
             applicable_ipc_sections=["302", "307", "34"],
             curriculum_level=curriculum_level,
@@ -150,13 +168,21 @@ class StubDefenceAgent(nn.Module):
         elif step_type == StepType.MENS_REA:
             return Action(step_type=step_type, anchored_witness_ids=["W1"])
         elif step_type == StepType.LINKAGE:
-            return Action(step_type=step_type, anchored_evidence_ids=["E3"], cited_ipc_sections=["302"])
+            return Action(
+                step_type=step_type,
+                anchored_evidence_ids=["E3"],
+                cited_ipc_sections=["302"],
+            )
         elif step_type == StepType.COUNTER_ARGUMENT:
             return Action(step_type=step_type, anchored_witness_ids=["W1"])
         elif step_type == StepType.IPC_APPLICATION:
             return Action(step_type=step_type, cited_ipc_sections=["302"])
         else:  # PRECEDENT_CITATION
-            return Action(step_type=step_type, judgment=JudgmentLabel.CONVICT, anchored_evidence_ids=["ILDC_STUB_001"])
+            return Action(
+                step_type=step_type,
+                judgment=JudgmentLabel.CONVICT,
+                anchored_evidence_ids=["ILDC_STUB_001"],
+            )
 
     def get_log_prob(self, observation: Observation, action: Action) -> torch.Tensor:
         x = self._policy_head(torch.tensor([1.0]))
@@ -265,15 +291,11 @@ def run_eval(
             ep_reward += step_result.reward
             ep_steps += 1
 
-        # Check if the episode succeeded (all 6 valid steps)
-        valid_count = sum(
-            1 for a in observation.submitted_steps
-        )
-        matched = valid_count == 6
+        # Track judgment/precedent match when the episode succeeds.
+        verdict = env.get_last_verdict()
+        matched = bool(verdict.precedent_matched) if verdict is not None else False
 
-        challenges = sum(
-            1 for c in observation.prosecution_challenges
-        )
+        challenges = sum(1 for c in observation.prosecution_challenges)
         pwr = challenges / ep_steps if ep_steps > 0 else 0.0
 
         total_rewards.append(ep_reward)
@@ -379,7 +401,7 @@ def main(config_path: str = "config.yaml") -> None:
     )
 
     # 4. Instantiate defence agent
-    agent = StubDefenceAgent()
+    agent = DefenceAgent()
 
     # 5. Instantiate GRPO trainer
     trainer = GRPOTrainer(
@@ -420,7 +442,7 @@ def main(config_path: str = "config.yaml") -> None:
         level = curriculum.level
 
         # 2. Train step
-        metrics = trainer.train_step(level)
+        metrics = trainer.train_step(level, global_step=step)
 
         # 3. Record each episode from the last group rollout
         for rollout in trainer.last_rollouts:
