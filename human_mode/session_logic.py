@@ -12,14 +12,36 @@ from nyayarl.precedents import PrecedentsDB
 from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
 
 from nyayarl.models import Action, JudgmentLabel, Observation, StepResult, StepType
+from nyayarl.openenv_config import load_openenv_config
+from nyayarl.client import NyayaRLEnvClient
 
 
 def build_environment() -> NyayaRLEnvironment:
+    cfg = load_openenv_config()
+    if cfg.mode == "remote":
+        # Remote mode uses HTTP client; environment stays local in Gradio/CLI.
+        # Callers should use `NyayaRLEnvClient` directly for remote stepping.
+        # We still return a local env so the UI remains functional.
+        pass
+
     precedents = PrecedentsDB()
     judge = Track2JudgeAdapter(JudgeAgent(), precedents)
     prosecution = Track2ProsecutionAdapter(ProsecutionAgent())
     case_generator = Track2CaseGenerator()
     return NyayaRLEnvironment(case_generator=case_generator, judge=judge, prosecution=prosecution)
+
+
+def build_remote_client() -> NyayaRLEnvClient:
+    """
+    Build an HTTP client from `nyayarl/openenv.yaml`.
+    """
+    cfg = load_openenv_config()
+    if cfg.mode != "remote" or cfg.remote is None:
+        raise RuntimeError("openenv.yaml mode is not 'remote'")
+    return NyayaRLEnvClient(
+        cfg.remote.api_base_url,
+        timeout_seconds=cfg.remote.timeout_seconds,
+    )
 
 
 def next_step_type(observation: Observation) -> StepType:

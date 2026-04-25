@@ -35,8 +35,9 @@ def _jsonable(x: Any) -> Any:
 
 
 class NyayaRLEnvClient:
-    def __init__(self, base_url: str) -> None:
+    def __init__(self, base_url: str, *, timeout_seconds: int = 30) -> None:
         self._base = base_url.rstrip("/")
+        self._timeout = int(timeout_seconds)
 
     def health(self) -> dict[str, Any]:
         return self._get("/health")
@@ -62,7 +63,7 @@ class NyayaRLEnvClient:
     def _get(self, path: str) -> dict[str, Any]:
         req = urllib.request.Request(self._base + path, method="GET")
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"HTTP {e.code}: {e.read().decode('utf-8', 'ignore')}") from e
@@ -76,7 +77,7 @@ class NyayaRLEnvClient:
             headers={"Content-Type": "application/json"},
         )
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"HTTP {e.code}: {e.read().decode('utf-8', 'ignore')}") from e
