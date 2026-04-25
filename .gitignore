@@ -6,3 +6,7 @@ checkpoints/
 human_mode/sessions/
 venv/
 *.pt
+__pycache__/
+*.pyc
+venv/
+human_mode/sessions/
