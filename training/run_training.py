@@ -31,7 +31,10 @@ from nyayarl.models import (
     Verdict,
     WitnessStatement,
 )
-from nyayarl.agents import DefenceAgent
+from nyayarl.agents import DefenceAgent, JudgeAgent, ProsecutionAgent
+from nyayarl.case_generator import Track2CaseGenerator
+from nyayarl.precedents import PrecedentsDB
+from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
 from training.curriculum import CurriculumManager
 from training.grpo_trainer import GRPOTrainer
 
@@ -387,10 +390,15 @@ def main(config_path: str = "config.yaml") -> None:
     print(f"  G: {config['G']}, lr: {config['lr']}")
     print()
 
-    # 2. Instantiate environment
+    # 2. Instantiate Track 2-backed environment
+    precedents = PrecedentsDB()
+    judge = Track2JudgeAdapter(JudgeAgent(), precedents)
+    prosecution = Track2ProsecutionAdapter(ProsecutionAgent())
+    case_generator = Track2CaseGenerator()
     env = NyayaRLEnvironment(
-        case_generator=StubCaseGenerator(),
-        judge=StubJudge(),
+        case_generator=case_generator,
+        judge=judge,
+        prosecution=prosecution,
     )
 
     # 3. Instantiate curriculum manager

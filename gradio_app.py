@@ -23,7 +23,8 @@ import torch
 import torch.nn as nn
 
 from nyayarl.environment import NyayaRLEnvironment
-from training.run_training import StubDefenceAgent as TrainedDefenceAgent
+from nyayarl.agents import DefenceAgent as TrainedDefenceAgent
+from human_mode.session_logic import build_environment
 from nyayarl.models import (
     Action,
     CaseFile,
@@ -78,52 +79,7 @@ def _serialize(obj: Any) -> Any:
     return obj
 
 
-# ── Stub dependencies ──────────────────────────────────────────────────────
-
-
-class StubCaseGenerator:
-    """Generates a structurally valid case file."""
-
-    def generate(self, curriculum_level: int) -> CaseFile:
-        return CaseFile(
-            case_id=f"HF_{curriculum_level:03d}_{random.randint(100, 999)}",
-            fir=(
-                "[FIR] The accused was apprehended at the scene with physical "
-                "evidence linking them to the alleged offence under the Indian "
-                "Penal Code. Incident reported at 23:15 hours."
-            ),
-            accused_count=curriculum_level,
-            evidence_items=[
-                EvidenceItem(id="E1", description="Bloodstained knife recovered from scene", type=EvidenceType.PHYSICAL, is_present=True),
-                EvidenceItem(id="E2", description="DNA analysis report matching accused", type=EvidenceType.FORENSIC, is_present=True),
-                EvidenceItem(id="E3", description="CCTV footage from adjacent premises", type=EvidenceType.DOCUMENTARY, is_present=True),
-                EvidenceItem(id="E4", description="Mobile phone call records", type=EvidenceType.TESTIMONIAL, is_present=curriculum_level < 3),
-            ],
-            witness_statements=[
-                WitnessStatement(id="W1", content="Saw accused fleeing scene at approx. 11:30 PM", reliability=0.85, is_contradicting=False),
-                WitnessStatement(id="W2", content="Heard loud argument from victim's house", reliability=0.70, is_contradicting=False),
-                WitnessStatement(id="W3", content="Claims accused was elsewhere (alibi witness)", reliability=0.40, is_contradicting=True),
-            ],
-            applicable_ipc_sections=["302", "307", "34"][:max(1, curriculum_level)],
-            curriculum_level=curriculum_level,
-            precedent_id="ILDC_2023_001",
-        )
-
-
-class StubJudge:
-    """Returns a placeholder verdict."""
-
-    def evaluate(self, case_file: CaseFile, submitted_steps: list[Action]) -> Verdict:
-        judgment = JudgmentLabel.PARTIAL
-        if submitted_steps and submitted_steps[-1].judgment is not None:
-            judgment = submitted_steps[-1].judgment
-        return Verdict(
-            judgment=judgment,
-            matched_precedent_id=case_file.precedent_id,
-            precedent_matched=True,
-            total_reward=0.0,
-            prosecution_win_rate=0.2,
-        )
+# Environment wiring uses Track2 components via `human_mode.session_logic.build_environment`.
 
 
 class StubDefenceAgent(nn.Module):
@@ -315,10 +271,7 @@ def _load_session_logs() -> list[list[str]]:
 
 def start_case(mode: str, level: int, state: dict) -> tuple:
     """Reset environment and display the case file."""
-    env = NyayaRLEnvironment(
-        case_generator=StubCaseGenerator(),
-        judge=StubJudge(),
-    )
+    env = build_environment()
 
     observation = env.reset(level)
     cf = observation.case_file

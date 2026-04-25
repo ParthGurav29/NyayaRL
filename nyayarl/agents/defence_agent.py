@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import random
-from typing import Any
-
 import torch
 import torch.nn as nn
 
@@ -150,27 +148,8 @@ class DefenceAgent(nn.Module):
 
         return ent
 
-    def state_dict(self) -> dict[str, Any]:
-        return {
-            "evidence_count_logits": self.evidence_count_logits.detach().cpu().tolist(),
-            "witness_count_logits": self.witness_count_logits.detach().cpu().tolist(),
-            "ipc_count_logits": self.ipc_count_logits.detach().cpu().tolist(),
-            "judgment_logits": self.judgment_logits.detach().cpu().tolist(),
-        }
-
-    @classmethod
-    def from_state_dict(cls, state: dict[str, Any]) -> "DefenceAgent":
-        agent = cls()
-        with torch.no_grad():
-            if "evidence_count_logits" in state:
-                agent.evidence_count_logits.copy_(torch.tensor(state["evidence_count_logits"], dtype=torch.float32))
-            if "witness_count_logits" in state:
-                agent.witness_count_logits.copy_(torch.tensor(state["witness_count_logits"], dtype=torch.float32))
-            if "ipc_count_logits" in state:
-                agent.ipc_count_logits.copy_(torch.tensor(state["ipc_count_logits"], dtype=torch.float32))
-            if "judgment_logits" in state:
-                agent.judgment_logits.copy_(torch.tensor(state["judgment_logits"], dtype=torch.float32))
-        return agent
+    # NOTE: We intentionally rely on `nn.Module.state_dict()` / `load_state_dict()`
+    # for checkpoint compatibility across training + Gradio.
 
     # ── helpers ──────────────────────────────────────────────────────────
 
