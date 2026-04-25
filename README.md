@@ -1,13 +1,3 @@
----
-title: NyayaRL — Indian Legal Reasoning Arena
-emoji: ⚖️
-colorFrom: indigo
-colorTo: blue
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # NyayaRL ⚖️ — Indian Legal Reasoning Arena
 
 NyayaRL is a multi-agent reinforcement learning environment for Indian legal reasoning. It models the adversarial process of constructing a legally sound argument chain — from establishing *actus reus* through precedent citation — where a defence agent builds a 6-step argument and a prosecution agent challenges each step. A deterministic judge scores every move against the Indian Penal Code and ILDC precedent database.
