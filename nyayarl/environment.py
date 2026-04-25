@@ -23,13 +23,9 @@ from nyayarl.models import (
 )
 
 from rewards.scoring_rubric import (
-    TERMINAL_EFFICIENCY_BONUS,
-    TERMINAL_PRECEDENT_MATCHED,
-    TERMINAL_PRECEDENT_UNMATCHED,
     TERMINAL_PROSECUTION_PENALTY,
-    TERMINAL_STUCK_PENALTY,
-    TERMINAL_TIMEOUT_PENALTY,
 )
+from rewards.reward_calculator import RewardCalculator
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -96,6 +92,7 @@ class NyayaRLEnvironment:
         self._judge = judge
         self._prosecution = prosecution
         self._validator = ArgumentChainValidator()
+        self._rewards = RewardCalculator()
 
         # ── Episode state (all reset in reset()) ─────────────────────────
         self._case_file: CaseFile | None = None
@@ -244,7 +241,11 @@ class NyayaRLEnvironment:
         assert self._case_file is not None
 
         if termination in ("stuck", "timeout"):
-            return TERMINAL_STUCK_PENALTY if termination == "stuck" else TERMINAL_TIMEOUT_PENALTY
+            return self._rewards.terminal(
+                termination=termination,
+                verdict_precedent_matched=None,
+                action_count=self._action_count,
+            )
 
         # ── Success path — call the judge ────────────────────────────────
         verdict = self._judge.evaluate(self._case_file, self._submitted_steps)
@@ -252,15 +253,11 @@ class NyayaRLEnvironment:
 
         reward = 0.0
 
-        # Precedent match bonus/penalty
-        if verdict.precedent_matched:
-            reward += TERMINAL_PRECEDENT_MATCHED
-        else:
-            reward += TERMINAL_PRECEDENT_UNMATCHED
-
-        # Efficiency bonus: completed the chain with no wasted actions
-        if self._action_count <= _MIN_VALID_PATH_LENGTH:
-            reward += TERMINAL_EFFICIENCY_BONUS
+        reward += self._rewards.terminal(
+            termination="success",
+            verdict_precedent_matched=bool(verdict.precedent_matched),
+            action_count=self._action_count,
+        )
 
         # Prosecution dominance penalty
         if verdict.prosecution_win_rate > 0.6:

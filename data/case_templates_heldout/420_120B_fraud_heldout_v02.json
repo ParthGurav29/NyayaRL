@@ -1,0 +1,86 @@
+{
+  "template_id": "420_120B_fraud_heldout_v02",
+  "description": "Cheating and Criminal Conspiracy cases (held-out variant 2)",
+  "ipc_sections": [420, 120],
+  "difficulty_range": [2, 4],
+  "evidence_pool": [
+    {
+      "id": "420_120B_fraud_heldout_v02:forged_documents",
+      "type": "documentary",
+      "description": "Fake property papers, certificates, or contracts",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.98
+    },
+    {
+      "id": "420_120B_fraud_heldout_v02:bank_records",
+      "type": "documentary",
+      "description": "Transaction records showing money flow",
+      "actus_reus_weight": 0.85,
+      "presence_prob": 0.8806384242439951
+    },
+    {
+      "id": "420_120B_fraud_heldout_v02:victim_statement",
+      "type": "documentary",
+      "description": "Written complaint by victim detailing fraud",
+      "actus_reus_weight": 0.7,
+      "presence_prob": 0.9030386474467893
+    },
+    {
+      "id": "420_120B_fraud_heldout_v02:phone_records",
+      "type": "digital",
+      "description": "Call logs and messages between accused and victim",
+      "actus_reus_weight": 0.75,
+      "presence_prob": 0.6904489773876099
+    },
+    {
+      "id": "420_120B_fraud_heldout_v02:witness_testimony_conspiracy",
+      "type": "documentary",
+      "description": "Testimony about planning meetings between co-accused",
+      "actus_reus_weight": 0.8,
+      "presence_prob": 0.4620587411998335
+    }
+  ],
+  "witness_pool": [
+    {
+      "id": "420_120B_fraud_heldout_v02:victim",
+      "type": "eyewitness",
+      "description": "Person who was defrauded",
+      "mens_rea_keywords": ["promised", "assured", "guaranteed", "knew", "intentionally"],
+      "reliability_alpha": 6,
+      "reliability_beta": 3
+    },
+    {
+      "id": "420_120B_fraud_heldout_v02:bank_official",
+      "type": "expert",
+      "description": "Bank manager testifying about suspicious transactions",
+      "mens_rea_keywords": ["suspicious", "structured", "deliberate", "pattern"],
+      "reliability_alpha": 9,
+      "reliability_beta": 2
+    },
+    {
+      "id": "420_120B_fraud_heldout_v02:accomplice_turned_approver",
+      "type": "eyewitness",
+      "description": "Co-accused who became prosecution witness",
+      "mens_rea_keywords": ["planned", "agreed", "conspired", "meeting"],
+      "reliability_alpha": 3,
+      "reliability_beta": 6
+    },
+    {
+      "id": "420_120B_fraud_heldout_v02:document_expert",
+      "type": "expert",
+      "description": "Forensic expert on document authenticity",
+      "mens_rea_keywords": ["forged", "altered", "fabricated", "intentional"],
+      "reliability_alpha": 9,
+      "reliability_beta": 2
+    }
+  ],
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "min_argument_steps": 6,
+    "key_evidence": ["forged_documents", "bank_records"],
+    "key_witnesses": ["victim", "bank_official"]
+  },
+  "precedents": ["ILDC_2021_003", "ILDC_2017_034", "ILDC_2019_078", "ILDC_2020_112"],
+  "notes": "Held-out template for 420/120B. Second variant to reduce overfitting to a single fraud template."
+}
+

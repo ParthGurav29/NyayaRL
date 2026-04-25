@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+import zlib
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -103,6 +104,13 @@ class Track2CaseGenerator:
 
         precedent_id = self._choose_precedent_id(template)
 
+        # Ensure the episode is procedurally solvable: at least one valid anchor exists
+        # for each of the gating steps (1–3) and a reliable witness exists for step 2.
+        evidence_items, witnesses = self._ensure_minimum_solvable_set(
+            evidence_items=evidence_items,
+            witnesses=witnesses,
+        )
+
         return CaseFile(
             case_id=f"{template_id}_{self._rng.randint(1000, 9999)}",
             template_id=template_id,
@@ -165,8 +173,10 @@ class Track2CaseGenerator:
 
         # Use hash of template_id to deterministically select a precedent
         # This ensures the same template always gets the same precedent
-        hash_value = hash(template_id)
-        index = abs(hash_value) % len(precedents)
+        # IMPORTANT: Python's built-in hash() is salted per process unless PYTHONHASHSEED is fixed,
+        # which silently changes precedent selection across runs. Use a stable hash instead.
+        hash_value = zlib.crc32(template_id.encode("utf-8", "ignore"))
+        index = int(hash_value) % len(precedents)
         return str(precedents[index])
 
     def _sample_evidence(self, template: dict[str, Any]) -> list[EvidenceItem]:
@@ -211,3 +221,74 @@ class Track2CaseGenerator:
                 )
             )
         return witnesses
+
+    def _ensure_minimum_solvable_set(
+        self,
+        *,
+        evidence_items: list[EvidenceItem],
+        witnesses: list[WitnessStatement],
+    ) -> tuple[list[EvidenceItem], list[WitnessStatement]]:
+        """
+        Guarantee at least one valid candidate exists for the validator/agent masks:
+
+        - Step 1 (Actus Reus): a present PHYSICAL or FORENSIC evidence item
+        - Step 2 (Mens Rea): a witness with reliability > 0.5
+        - Step 3 (Linkage): a present DOCUMENTARY, DIGITAL, or FORENSIC evidence item
+
+        Without these, the DefenceAgent's action masking can force k=0 and make an
+        episode impossible to complete (successes collapse to 0 in eval).
+        """
+        # Evidence: Step 1 candidates
+        step1_ok = any(
+            e.is_present and e.type in (EvidenceType.PHYSICAL, EvidenceType.FORENSIC)
+            for e in evidence_items
+        )
+        if not step1_ok:
+            candidates = [
+                e for e in evidence_items
+                if e.type in (EvidenceType.PHYSICAL, EvidenceType.FORENSIC)
+            ]
+            if candidates:
+                pick = self._rng.choice(candidates)
+                evidence_items = [
+                    replace(e, is_present=True) if e.id == pick.id else e
+                    for e in evidence_items
+                ]
+            elif evidence_items:
+                # Some domains (e.g., fraud) may have only documentary/digital evidence.
+                # To keep episodes solvable under the Step-1 rule, promote one present
+                # evidence item to FORENSIC.
+                pick = self._rng.choice(evidence_items)
+                evidence_items = [
+                    replace(e, is_present=True, type=EvidenceType.FORENSIC) if e.id == pick.id else e
+                    for e in evidence_items
+                ]
+
+        # Evidence: Step 3 candidates
+        step3_ok = any(
+            e.is_present and e.type in (EvidenceType.DOCUMENTARY, EvidenceType.DIGITAL, EvidenceType.FORENSIC)
+            for e in evidence_items
+        )
+        if not step3_ok:
+            candidates = [
+                e for e in evidence_items
+                if e.type in (EvidenceType.DOCUMENTARY, EvidenceType.DIGITAL, EvidenceType.FORENSIC)
+            ]
+            if candidates:
+                pick = self._rng.choice(candidates)
+                evidence_items = [
+                    replace(e, is_present=True) if e.id == pick.id else e
+                    for e in evidence_items
+                ]
+
+        # Witnesses: Step 2 candidates
+        step2_ok = any(w.reliability > 0.5 for w in witnesses)
+        if not step2_ok and witnesses:
+            pick = self._rng.choice(witnesses)
+            # Bump reliability just above the strict cutoff.
+            witnesses = [
+                replace(w, reliability=0.51) if w.id == pick.id else w
+                for w in witnesses
+            ]
+
+        return evidence_items, witnesses

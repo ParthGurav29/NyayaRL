@@ -1,0 +1,128 @@
+{
+  "description": "Culpable Homicide / Murder cases (variant 5)",
+  "difficulty_range": [
+    1,
+    4
+  ],
+  "evidence_pool": [
+    {
+      "actus_reus_weight": 0.7,
+      "description": "CCTV footage showing accused near crime scene",
+      "id": "302_304_homicide_v05:cctv_footage",
+      "presence_prob": 0.29888760698741773,
+      "type": "digital"
+    },
+    {
+      "actus_reus_weight": 0.9,
+      "description": "Bloodstained knife/weapon recovered from scene",
+      "id": "302_304_homicide_v05:weapon",
+      "presence_prob": 0.8599235088356315,
+      "type": "physical"
+    },
+    {
+      "actus_reus_weight": 0.9,
+      "description": "Fingerprints on weapon matching accused",
+      "id": "302_304_homicide_v05:fingerprints",
+      "presence_prob": 0.6885358667162575,
+      "type": "forensic"
+    },
+    {
+      "actus_reus_weight": 0.85,
+      "description": "Bloodstains on accused clothing matching victim DNA",
+      "id": "302_304_homicide_v05:bloodstains",
+      "presence_prob": 0.621500549487016,
+      "type": "forensic"
+    },
+    {
+      "actus_reus_weight": 0.95,
+      "description": "Post-mortem report showing cause of death",
+      "id": "302_304_homicide_v05:autopsy_report",
+      "presence_prob": 0.8058283577520527,
+      "type": "documentary"
+    }
+  ],
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "key_evidence": [
+      "weapon",
+      "autopsy_report"
+    ],
+    "key_witnesses": [
+      "eyewitness",
+      "medical_officer"
+    ],
+    "min_argument_steps": 6
+  },
+  "ipc_sections": [
+    "302",
+    "304"
+  ],
+  "notes": "Level 1: Single accused, clear evidence. Level 4: Precedent conflict between 302 (murder) and 304 (culpable homicide not amounting to murder) | auto-variant 5\n\n[HELDOUT_VARIANT] generated for eval harness",
+  "precedents": [
+    "ILDC_2020_045",
+    "ILDC_2018_112",
+    "ILDC_2021_089",
+    "ILDC_2019_001"
+  ],
+  "template_id": "302_304_homicide_v05_heldout_v09",
+  "witness_pool": [
+    {
+      "contradiction_hint": "low",
+      "description": "Neighbor who heard sounds or knew of prior disputes",
+      "id": "302_304_homicide_v05:neighbor",
+      "mens_rea_keywords": [
+        "motive",
+        "history",
+        "fight",
+        "quarrel",
+        "previous"
+      ],
+      "reliability_alpha": 4.692254504476934,
+      "reliability_beta": 3.1918736540321,
+      "type": "character"
+    },
+    {
+      "contradiction_hint": "high",
+      "description": "Doctor who conducted autopsy or examined injuries",
+      "id": "302_304_homicide_v05:medical_officer",
+      "mens_rea_keywords": [
+        "force",
+        "direction",
+        "intentional",
+        "deliberate"
+      ],
+      "reliability_alpha": 6.761673541795257,
+      "reliability_beta": 1.0093231359331902,
+      "type": "expert"
+    },
+    {
+      "contradiction_hint": "low",
+      "description": "Person who saw the crime occur",
+      "id": "302_304_homicide_v05:eyewitness",
+      "mens_rea_keywords": [
+        "intent",
+        "threat",
+        "argument",
+        "angry",
+        "shouted"
+      ],
+      "reliability_alpha": 7.023402823611178,
+      "reliability_beta": 1.0,
+      "type": "eyewitness"
+    },
+    {
+      "contradiction_hint": "high",
+      "description": "Family member testifying about relationship dynamics",
+      "id": "302_304_homicide_v05:family_member",
+      "mens_rea_keywords": [
+        "tension",
+        "conflict",
+        "threatened",
+        "fear"
+      ],
+      "reliability_alpha": 3.6340649392773545,
+      "reliability_beta": 1.0,
+      "type": "character"
+    }
+  ]
+}

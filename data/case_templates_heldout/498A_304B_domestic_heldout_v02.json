@@ -1,0 +1,86 @@
+{
+  "template_id": "498A_304B_domestic_heldout_v02",
+  "description": "Domestic Violence and Dowry Death cases (held-out variant 2)",
+  "ipc_sections": [498, 304],
+  "difficulty_range": [2, 4],
+  "evidence_pool": [
+    {
+      "id": "498A_304B_domestic_heldout_v02:injury_photographs",
+      "type": "forensic",
+      "description": "Photos of injuries on deceased before death",
+      "actus_reus_weight": 0.85,
+      "presence_prob": 0.5906337964223624
+    },
+    {
+      "id": "498A_304B_domestic_heldout_v02:dying_declaration",
+      "type": "documentary",
+      "description": "Statement recorded by magistrate before victim died",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.72056786675146
+    },
+    {
+      "id": "498A_304B_domestic_heldout_v02:demand_letters",
+      "type": "documentary",
+      "description": "Letters or messages demanding dowry",
+      "actus_reus_weight": 0.9,
+      "presence_prob": 0.49768608226752353
+    },
+    {
+      "id": "498A_304B_domestic_heldout_v02:panchnama",
+      "type": "documentary",
+      "description": "Crime scene investigation report",
+      "actus_reus_weight": 0.8,
+      "presence_prob": 0.8195068369290704
+    },
+    {
+      "id": "498A_304B_domestic_heldout_v02:medical_report_burns",
+      "type": "forensic",
+      "description": "Medical examination showing burn injuries",
+      "actus_reus_weight": 0.9,
+      "presence_prob": 0.7584673768062556
+    }
+  ],
+  "witness_pool": [
+    {
+      "id": "498A_304B_domestic_heldout_v02:parents_of_deceased",
+      "type": "character",
+      "description": "Victim parents testifying about dowry demands",
+      "mens_rea_keywords": ["demanded", "harassed", "tortured", "complained"],
+      "reliability_alpha": 5,
+      "reliability_beta": 5
+    },
+    {
+      "id": "498A_304B_domestic_heldout_v02:neighbor_domestic",
+      "type": "character",
+      "description": "Neighbor who heard domestic disputes",
+      "mens_rea_keywords": ["shouting", "crying", "fight", "abuse"],
+      "reliability_alpha": 6,
+      "reliability_beta": 3
+    },
+    {
+      "id": "498A_304B_domestic_heldout_v02:relative_witness",
+      "type": "character",
+      "description": "Relative who witnessed harassment",
+      "mens_rea_keywords": ["cruelty", "demand", "pressure", "threatened"],
+      "reliability_alpha": 5,
+      "reliability_beta": 5
+    },
+    {
+      "id": "498A_304B_domestic_heldout_v02:magistrate",
+      "type": "expert",
+      "description": "Magistrate who recorded dying declaration",
+      "mens_rea_keywords": ["voluntary", "conscious", "coherent", "truthful"],
+      "reliability_alpha": 10,
+      "reliability_beta": 2
+    }
+  ],
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "min_argument_steps": 6,
+    "key_evidence": ["dying_declaration", "medical_report_burns"],
+    "key_witnesses": ["parents_of_deceased", "magistrate"]
+  },
+  "precedents": ["ILDC_2018_156", "ILDC_2020_201", "ILDC_2022_045", "ILDC_2016_089"],
+  "notes": "Held-out template for 498A/304B. Second variant to avoid a single-template eval."
+}
+

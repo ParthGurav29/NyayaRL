@@ -1,0 +1,21 @@
+# Fresh training run config (from-scratch) for checkpoint regeneration.
+# This is intentionally short so we can validate checkpoint integrity + eval at step 500 quickly.
+
+total_train_steps: 600
+eval_every: 100
+eval_episodes: 5
+checkpoint_every: 100
+
+checkpoint_dir: "checkpoints"
+log_dir: "logs"
+
+G: 16
+lr: 0.001
+clip_epsilon: 0.2
+entropy_coef: 0.05
+entropy_coef_final: 0.01
+entropy_anneal_steps: 10000
+
+window_size: 100
+promotion_threshold: 0.6
+

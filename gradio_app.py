@@ -9,6 +9,7 @@ meaningful operation delegates to the existing classes.
 
 from __future__ import annotations
 
+import argparse
 import dataclasses
 import json
 import os
@@ -22,6 +23,7 @@ import gradio as gr
 import torch
 import torch.nn as nn
 
+from nyayarl.checkpointing import load_defence_agent_checkpoint
 from nyayarl.environment import NyayaRLEnvironment
 from nyayarl.agents import DefenceAgent as TrainedDefenceAgent
 from human_mode.session_logic import build_environment
@@ -37,6 +39,34 @@ from nyayarl.models import (
     Verdict,
     WitnessStatement,
 )
+
+
+def _set_seed(seed: int) -> None:
+    """
+    Best-effort deterministic mode for local verification.
+
+    Note: full determinism is not guaranteed across all PyTorch ops / backends,
+    but this removes the common sources of run-to-run drift (Python RNG, Torch RNG).
+    """
+    seed = int(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    # Optional NumPy support (only if installed)
+    try:
+        import numpy as np  # type: ignore
+
+        np.random.seed(seed)
+    except Exception:
+        pass
+    # CuDNN determinism (no-op on Mac/MPS)
+    try:
+        torch.backends.cudnn.deterministic = True  # type: ignore[attr-defined]
+        torch.backends.cudnn.benchmark = False  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
 
 # ── Constants ───────────────────────────────────────────────────────────────
 
@@ -58,10 +88,17 @@ _STEP_LABELS = [
     "Step 6 — Precedent Citation",
 ]
 
-_SESSIONS_DIR = Path("human_mode/sessions")
-_CHECKPOINT_DIR = Path(os.getenv("NYAYARL_CHECKPOINT_DIR", "/app/checkpoints"))
+# This automatically finds the folder where gradio_app.py lives
+BASE_DIR = Path(__file__).resolve().parent
 
-_DEMO_MODE = False  # Set to True if no checkpoint found
+_SESSIONS_DIR = Path(
+    os.getenv("NYAYARL_SESSIONS_DIR", str(BASE_DIR / "human_mode" / "sessions"))
+)
+_CHECKPOINT_DIR = Path(
+    os.getenv("NYAYARL_CHECKPOINT_DIR", str(BASE_DIR / "checkpoints"))
+)
+_SEED_ENV = os.getenv("NYAYARL_SEED")
+_SEED: int | None = int(_SEED_ENV) if _SEED_ENV is not None and str(_SEED_ENV).strip() else None
 
 # ── Serialisation helper ────────────────────────────────────────────────────
 
@@ -126,20 +163,76 @@ def _load_agent() -> nn.Module:
     Attempt to load a trained checkpoint. Falls back to stub agent.
     """
     global _DEMO_MODE
-    agent: nn.Module = TrainedDefenceAgent()
+    require_ckpt = os.getenv("NYAYARL_REQUIRE_CHECKPOINT") == "1"
+    allow_legacy = os.getenv("NYAYARL_ALLOW_LEGACY_CHECKPOINT") == "1"
+    agent: nn.Module = TrainedDefenceAgent(rng_seed=_SEED)
 
     if _CHECKPOINT_DIR.exists():
-        checkpoints = sorted(_CHECKPOINT_DIR.glob("step_*.pt"))
-        if checkpoints:
+        # Prefer an explicit "latest.pt" if present (supports symlinks).
+        # Otherwise fall back to the newest step_*.pt lexicographically.
+        latest = _CHECKPOINT_DIR / "latest.pt"
+        if latest.exists():
+            ckpt_path = latest
+        else:
+            preferred = sorted(_CHECKPOINT_DIR.glob("step_*.pt"))
+            ckpt_path = preferred[-1] if preferred else None
+
+        if ckpt_path is not None:
             try:
-                ckpt = torch.load(checkpoints[-1], weights_only=False, map_location="cpu")
-                agent.load_state_dict(ckpt["agent_state_dict"])
-                print(f"✓ Loaded checkpoint: {checkpoints[-1]}")
-                _DEMO_MODE = False
+                res = load_defence_agent_checkpoint(
+                    checkpoint_path=ckpt_path,
+                    agent=agent,
+                    map_location="cpu",
+                    require_full_match=not allow_legacy,
+                    allow_legacy_partial=allow_legacy,
+                    do_value_check=True,
+                )
+                if res.was_partial_load:
+                    print(
+                        "⚠ PARTIAL CHECKPOINT LOAD: model parameters were not fully restored. "
+                        f"missing={len(res.diff.missing_in_checkpoint)} "
+                        f"unexpected={len(res.diff.unexpected_in_checkpoint)} "
+                        f"shape_mismatches={len(res.diff.shape_mismatches)} "
+                        f"legacy={res.was_legacy_remap}"
+                    )
+                    if not allow_legacy:
+                        raise RuntimeError("Partial load occurred while legacy loads are disabled.")
+                else:
+                    print("✅ Loaded checkpoint (strict) and verified values.")
+                # realpath resolves latest.pt symlink to the actual step_*.pt file.
+                print(
+                    f"✓ Loaded checkpoint: {os.path.realpath(str(ckpt_path))} "
+                    f"(selected={ckpt_path} dir={_CHECKPOINT_DIR})"
+                )
+                _DEMO_MODE = bool(res.was_partial_load)
                 agent.eval()
                 return agent
             except Exception as e:
-                print(f"⚠ Failed to load checkpoint: {e}")
+                print(f"⚠ Failed to load checkpoint from {ckpt_path}: {e}")
+                if require_ckpt:
+                    raise RuntimeError(
+                        f"CRITICAL failure: Checkpoint load failed from {ckpt_path} "
+                        f"(dir={_CHECKPOINT_DIR}). Deployment aborted."
+                    ) from e
+                # If we failed to load a trained checkpoint, we must clearly enter demo mode.
+        else:
+            print(
+                f"⚠ No step_*.pt found in checkpoint dir: {_CHECKPOINT_DIR} "
+                f"(set NYAYARL_CHECKPOINT_DIR to override)"
+            )
+            if require_ckpt:
+                raise RuntimeError(
+                    f"CRITICAL failure: No checkpoint found in {_CHECKPOINT_DIR}. Deployment aborted."
+                )
+    else:
+        print(
+            f"⚠ Checkpoint dir does not exist: {_CHECKPOINT_DIR} "
+            f"(set NYAYARL_CHECKPOINT_DIR to override)"
+        )
+        if require_ckpt:
+            raise RuntimeError(
+                f"CRITICAL failure: Checkpoint dir does not exist: {_CHECKPOINT_DIR}. Deployment aborted."
+            )
 
     _DEMO_MODE = True
     print("⚠ No trained checkpoint — running in demo mode")
@@ -148,7 +241,14 @@ def _load_agent() -> nn.Module:
     return agent
 
 
-_agent = _load_agent()
+_agent: nn.Module | None = None
+
+
+def _get_agent() -> nn.Module:
+    global _agent
+    if _agent is None:
+        _agent = _load_agent()
+    return _agent
 
 
 # ── Case file formatting ───────────────────────────────────────────────────
@@ -373,7 +473,7 @@ def submit_step(
     else:
         # Prosecution mode — agent builds the action
         with torch.no_grad():
-            action = _agent.select_action(obs)
+            action = _get_agent().select_action(obs)
 
     # Execute step
     try:
@@ -457,6 +557,8 @@ def refresh_sessions() -> list[list[str]]:
 def build_app() -> gr.Blocks:
     """Construct the full Gradio interface."""
 
+    # Ensure agent is initialised so the banner reflects reality.
+    _get_agent()
     demo_banner = "⚠️ **Demo mode** — no trained model loaded. Agent uses heuristic actions." if _DEMO_MODE else ""
 
     with gr.Blocks(
@@ -590,5 +692,16 @@ def build_app() -> gr.Blocks:
 # ── Launch ──────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("--seed", type=int, default=None, help="Deterministic mode seed")
+    args = p.parse_args()
+
+    if args.seed is not None:
+        _set_seed(args.seed)
+        # Make the seed visible to the rest of the module (agent init uses this).
+        os.environ["NYAYARL_SEED"] = str(args.seed)
+        _SEED = int(args.seed)
+
     app = build_app()
-    app.launch(server_name="0.0.0.0", server_port=7860, share=False)
+    port = int(os.getenv("GRADIO_SERVER_PORT", "7860"))
+    app.launch(server_name="127.0.0.1", server_port=port, share=False)

@@ -1,0 +1,86 @@
+{
+  "template_id": "323_325_307_assault_heldout_v01",
+  "description": "Voluntarily Causing Hurt / Grievous Hurt / Attempt to Murder (held-out variant 1)",
+  "ipc_sections": [323, 325, 307],
+  "difficulty_range": [1, 4],
+  "evidence_pool": [
+    {
+      "id": "323_325_307_assault_heldout_v01:medical_report_injuries",
+      "type": "forensic",
+      "description": "Medical report documenting nature and severity of injuries",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.98
+    },
+    {
+      "id": "323_325_307_assault_heldout_v01:weapon_used",
+      "type": "physical",
+      "description": "Weapon used in assault (stick, knife, acid, etc.)",
+      "actus_reus_weight": 0.85,
+      "presence_prob": 0.7974270780658176
+    },
+    {
+      "id": "323_325_307_assault_heldout_v01:clothing_bloodstained",
+      "type": "forensic",
+      "description": "Accused clothing with victim blood",
+      "actus_reus_weight": 0.8,
+      "presence_prob": 0.6882566468205136
+    },
+    {
+      "id": "323_325_307_assault_heldout_v01:cctv_assault",
+      "type": "digital",
+      "description": "Video footage of assault incident",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.4774188798338833
+    },
+    {
+      "id": "323_325_307_assault_heldout_v01:location_photos",
+      "type": "documentary",
+      "description": "Photos of crime scene showing blood, weapons",
+      "actus_reus_weight": 0.7,
+      "presence_prob": 0.7161625754927167
+    }
+  ],
+  "witness_pool": [
+    {
+      "id": "323_325_307_assault_heldout_v01:victim_survivor",
+      "type": "eyewitness",
+      "description": "Victim who survived the assault",
+      "mens_rea_keywords": ["intention", "aimed", "targeted", "deliberately"],
+      "reliability_alpha": 5,
+      "reliability_beta": 4
+    },
+    {
+      "id": "323_325_307_assault_heldout_v01:bystander",
+      "type": "eyewitness",
+      "description": "Person who witnessed the assault",
+      "mens_rea_keywords": ["saw", "witnessed", "observed", "clear"],
+      "reliability_alpha": 7,
+      "reliability_beta": 2
+    },
+    {
+      "id": "323_325_307_assault_heldout_v01:treating_doctor",
+      "type": "expert",
+      "description": "Doctor who treated the victim",
+      "mens_rea_keywords": ["grievous", "dangerous", "intentional", "severe"],
+      "reliability_alpha": 10,
+      "reliability_beta": 2
+    },
+    {
+      "id": "323_325_307_assault_heldout_v01:police_officer",
+      "type": "expert",
+      "description": "Investigating officer",
+      "mens_rea_keywords": ["recovered", "arrested", "confession", "evidence"],
+      "reliability_alpha": 7,
+      "reliability_beta": 2
+    }
+  ],
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "min_argument_steps": 6,
+    "key_evidence": ["medical_report_injuries", "weapon_used"],
+    "key_witnesses": ["victim_survivor", "treating_doctor"]
+  },
+  "precedents": ["ILDC_2017_134", "ILDC_2019_201", "ILDC_2021_078", "ILDC_2015_067"],
+  "notes": "Held-out template for 323/325/307 to ensure eval covers assault/attempt-to-murder cases."
+}
+

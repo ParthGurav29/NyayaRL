@@ -2,6 +2,37 @@
 
 NyayaRL is a multi-agent reinforcement learning environment for Indian legal reasoning. It models the adversarial process of constructing a legally sound argument chain — from establishing *actus reus* through precedent citation — where a defence agent builds a 6-step argument and a prosecution agent challenges each step. A deterministic judge scores every move against the Indian Penal Code and ILDC precedent database.
 
+## ✅ Local setup (Mac/Linux)
+
+From the repo root:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+pip install -e .
+```
+
+## 🧠 Train a model (creates `checkpoints/step_*.pt`)
+
+```bash
+source venv/bin/activate
+python training/run_training.py --config config.yaml
+```
+
+If training resumes from an existing checkpoint, that’s expected.
+
+## 🖥️ Run the UI (loads the trained model)
+
+```bash
+source venv/bin/activate
+export NYAYARL_CHECKPOINT_DIR="$(pwd)/checkpoints"
+python gradio_app.py
+```
+
+If `NYAYARL_CHECKPOINT_DIR` is wrong or the folder has no `step_*.pt`, the UI will start in **Demo Mode** and print the exact reason at startup.
+
 ## 🎮 How to Play
 
 ### Tab 1 — "Play a Case"
