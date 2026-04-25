@@ -16,16 +16,13 @@ from pydantic import BaseModel, Field
 
 # Imports from nyayarl core logic
 from nyayarl.environment import NyayaRLEnvironment
-from nyayarl.models import (
-    Action,
-    CaseFile,
-    EvidenceItem,
-    EvidenceType,
-    JudgmentLabel,
-    StepType,
-    Verdict,
-    WitnessStatement,
-)
+from nyayarl.models import Action, JudgmentLabel, StepType
+
+# Track 2 components
+from nyayarl.case_generator import Track2CaseGenerator
+from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
+from nyayarl.agents import JudgeAgent, ProsecutionAgent
+from nyayarl.precedents import PrecedentsDB
 
 # ── Global State ─────────────────────────────────────────────────────────────
 
@@ -102,67 +99,20 @@ def _parse_action(body: ActionRequest) -> Action:
     )
 
 
-# ── Stub dependencies ────────────────────────────────────────────────────────
-
-class StubCaseGenerator:
-    """Generates a minimal but structurally valid case file."""
-    def generate(self, curriculum_level: int) -> CaseFile:
-        return CaseFile(
-            case_id=f"STUB_{curriculum_level:03d}",
-            fir="[Stub FIR] Placeholder first information report.",
-            accused_count=1,
-            evidence_items=[
-                EvidenceItem(
-                    id="E1",
-                    description="Physical evidence (stub)",
-                    type=EvidenceType.PHYSICAL,
-                    is_present=True,
-                ),
-                EvidenceItem(
-                    id="E2",
-                    description="Forensic evidence (stub)",
-                    type=EvidenceType.FORENSIC,
-                    is_present=True,
-                ),
-                EvidenceItem(
-                    id="E3",
-                    description="Documentary evidence (stub)",
-                    type=EvidenceType.DOCUMENTARY,
-                    is_present=True,
-                ),
-            ],
-            witness_statements=[
-                WitnessStatement(
-                    id="W1",
-                    content="Witness statement (stub)",
-                    reliability=0.85,
-                    is_contradicting=False,
-                ),
-            ],
-            applicable_ipc_sections=["302", "307", "34"],
-            curriculum_level=curriculum_level,
-            precedent_id="ILDC_STUB_001",
-        )
+# ── Track 2 component factories ──────────────────────────────────────────────
 
 
-class StubJudge:
-    """Returns a placeholder verdict."""
-    def evaluate(
-        self,
-        case_file: CaseFile,
-        submitted_steps: list[Action],
-    ) -> Verdict:
-        return Verdict(
-            judgment=submitted_steps[-1].judgment or JudgmentLabel.PARTIAL,
-            matched_precedent_id=case_file.precedent_id,
-            precedent_matched=True,
-            total_reward=0.0,
-            prosecution_win_rate=0.0,
-        )
+def _create_track2_components():
+    """Create Track 2 components for environment initialization."""
+    case_generator = Track2CaseGenerator()
+    precedents_db = PrecedentsDB()
+    judge_agent = JudgeAgent()
+    prosecution_agent = ProsecutionAgent()
 
-class StubProsecution:
-    def propose_challenge(self, case_file: CaseFile, defence_chain_len: int) -> str | None:
-        return None
+    judge = Track2JudgeAdapter(judge_agent, precedents_db)
+    prosecution = Track2ProsecutionAdapter(prosecution_agent)
+
+    return case_generator, judge, prosecution
 
 
 # ── App instance ─────────────────────────────────────────────────────────────
@@ -185,15 +135,16 @@ async def health() -> dict[str, str]:
 async def reset(body: ResetRequest) -> JSONResponse:
     """Start a new episode at the given curriculum level for the session."""
     session_id = body.session_id
-    
+
     # Initialize a new environment if this session doesn't exist
     if session_id not in environments:
+        case_gen, judge, prosecution = _create_track2_components()
         environments[session_id] = NyayaRLEnvironment(
-            case_generator=StubCaseGenerator(),
-            judge=StubJudge(),
-            prosecution=StubProsecution(),
+            case_generator=case_gen,
+            judge=judge,
+            prosecution=prosecution,
         )
-    
+
     env = environments[session_id]
     
     try:
