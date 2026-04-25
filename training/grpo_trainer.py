@@ -47,6 +47,19 @@ class GRPOTrainer:
         self.entropy_coef = float(entropy_coef)
         self._optim = torch.optim.Adam(self.defence_agent.parameters(), lr=self.lr)
 
+    def _compute_entropy(self) -> torch.Tensor:
+        """Compute entropy across all trainable categorical distributions."""
+        ent = torch.tensor(0.0)
+        for logits in [
+            self.defence_agent.evidence_count_logits,
+            self.defence_agent.witness_count_logits,
+            self.defence_agent.ipc_count_logits,
+            self.defence_agent.judgment_logits,
+        ]:
+            dist = torch.distributions.Categorical(logits=logits)
+            ent = ent + dist.entropy()
+        return ent
+
     def collect_group_rollouts(self, curriculum_level: int) -> list[Rollout]:
         rollouts: list[Rollout] = []
         for _ in range(self.G):
@@ -60,8 +73,8 @@ class GRPOTrainer:
                 action: Action = self.defence_agent.select_action(obs)
                 logp = self.defence_agent.get_log_prob(obs, action)  # must require grad
                 logps.append(logp)
-                # Approx entropy for counts + judgment distributions (not perfect, but nonzero signal)
-                ents.append(torch.tensor(0.0))
+                # Compute actual entropy from the policy's categorical distributions
+                ents.append(self._compute_entropy())
                 obs, step_result, done = self.environment.step(action)
                 ep_reward += float(step_result.reward)
                 if done:
@@ -91,7 +104,16 @@ class GRPOTrainer:
         per_rollout_logp = torch.stack(
             [torch.stack(r.log_probs).sum() if r.log_probs else torch.tensor(0.0) for r in rollouts]
         )
-        loss = -(adv_t.detach() * per_rollout_logp).mean()
+        # Mean entropy across all rollouts and timesteps
+        all_ents = []
+        for r in rollouts:
+            if r.entropies:
+                all_ents.append(torch.stack(r.entropies).mean())
+        mean_entropy = torch.stack(all_ents).mean() if all_ents else torch.tensor(0.0)
+
+        # Policy gradient loss with entropy bonus (entropy_coef encourages exploration)
+        policy_loss_raw = -(adv_t.detach() * per_rollout_logp).mean()
+        loss = policy_loss_raw - self.entropy_coef * mean_entropy
 
         # Sanity checks for Problem 1
         assert loss.requires_grad, "loss tensor does not require grad"
@@ -103,8 +125,8 @@ class GRPOTrainer:
 
         # Diagnostics
         mean_logp = float(per_rollout_logp.detach().mean().item())
-        entropy = 0.0
-        policy_loss = float(loss_before)
+        entropy = float(mean_entropy.detach().item())
+        policy_loss = float(policy_loss_raw.detach().item())
 
         return {
             "mean_reward": float(mean_reward),
