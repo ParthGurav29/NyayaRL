@@ -442,5 +442,4 @@ if __name__ == "__main__":
         help="config_fresh_train.yaml",
     )
     args = p.parse_args()
-    
     main(args.config)

@@ -1,0 +1,201 @@
+{
+  "timestamp": "2026-04-25T23:48:21.906050+00:00",
+  "mode": "courtroom_api",
+  "curriculum_level": 1,
+  "case_file": {
+    "case_id": "323_325_307_assault_4716",
+    "fir": "FIR (template 323_325_307_assault): Voluntarily Causing Hurt / Grievous Hurt / Attempt to Murder\n\nNotes: Level 1: Simple hurt (323). Level 2: Grievous hurt (325). Level 3-4: Attempt to murder (307) requires proving intention to kill, not just harm.",
+    "accused_count": 1,
+    "template_id": "323_325_307_assault",
+    "evidence_items": [
+      {
+        "id": "medical_report_injuries",
+        "description": "Medical report documenting nature and severity of injuries",
+        "type": "forensic",
+        "is_present": true
+      },
+      {
+        "id": "weapon_used",
+        "description": "Weapon used in assault (stick, knife, acid, etc.)",
+        "type": "physical",
+        "is_present": true
+      },
+      {
+        "id": "clothing_bloodstained",
+        "description": "Accused clothing with victim blood",
+        "type": "forensic",
+        "is_present": true
+      },
+      {
+        "id": "cctv_assault",
+        "description": "Video footage of assault incident",
+        "type": "digital",
+        "is_present": false
+      },
+      {
+        "id": "location_photos",
+        "description": "Photos of crime scene showing blood, weapons",
+        "type": "documentary",
+        "is_present": true
+      }
+    ],
+    "witness_statements": [
+      {
+        "id": "victim_survivor",
+        "content": "Victim who survived the assault",
+        "reliability": 0.8415313845540928,
+        "is_contradicting": true
+      },
+      {
+        "id": "bystander",
+        "content": "Person who witnessed the assault",
+        "reliability": 0.8142875089640088,
+        "is_contradicting": false
+      },
+      {
+        "id": "treating_doctor",
+        "content": "Doctor who treated the victim",
+        "reliability": 0.8968994408617953,
+        "is_contradicting": false
+      },
+      {
+        "id": "police_officer",
+        "content": "Investigating officer",
+        "reliability": 0.7362068550722326,
+        "is_contradicting": false
+      }
+    ],
+    "applicable_ipc_sections": [
+      "323",
+      "325",
+      "307"
+    ],
+    "curriculum_level": 1,
+    "precedent_id": "ILDC_2015_067"
+  },
+  "turns": [
+    {
+      "slot": 0,
+      "action": {
+        "step_type": "actus_reus",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "clothing_bloodstained"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 1,
+      "action": {
+        "step_type": "mens_rea",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [
+          "victim_survivor"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 0.75,
+        "failure_reason": null,
+        "prosecution_challenge": "Prosecution challenge: contradicting witness cited (witness_id=victim_survivor) \u2014 credibility of testimony is disputed"
+      }
+    },
+    {
+      "slot": 2,
+      "action": {
+        "step_type": "linkage",
+        "cited_ipc_sections": [
+          "325",
+          "323",
+          "307"
+        ],
+        "anchored_evidence_ids": [
+          "clothing_bloodstained"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 3,
+      "action": {
+        "step_type": "counter_argument",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "weapon_used",
+          "location_photos"
+        ],
+        "anchored_witness_ids": [
+          "treating_doctor",
+          "victim_survivor"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 4,
+      "action": {
+        "step_type": "ipc_application",
+        "cited_ipc_sections": [
+          "325",
+          "307"
+        ],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 5,
+      "action": {
+        "step_type": "precedent_citation",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "ILDC_2015_067"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": "convict"
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 7.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    }
+  ],
+  "verdict": {
+    "total_reward": 11.75,
+    "valid_steps": 6,
+    "chain_score": 1.0
+  },
+  "human_won": false
+}
