@@ -1,0 +1,242 @@
+{
+  "timestamp": "2026-04-25T21:41:12.872639+00:00",
+  "mode": "prosecution",
+  "curriculum_level": 3,
+  "case_file": {
+    "case_id": "302_304_homicide_5744",
+    "fir": "FIR (template 302_304_homicide): Culpable Homicide / Murder cases\n\nNotes: Level 1: Single accused, clear evidence. Level 4: Precedent conflict between 302 (murder) and 304 (culpable homicide not amounting to murder)",
+    "accused_count": 2,
+    "template_id": "302_304_homicide",
+    "evidence_items": [
+      {
+        "id": "weapon",
+        "description": "Bloodstained knife/weapon recovered from scene",
+        "type": "physical",
+        "is_present": false
+      },
+      {
+        "id": "bloodstains",
+        "description": "Bloodstains on accused clothing matching victim DNA",
+        "type": "forensic",
+        "is_present": true
+      },
+      {
+        "id": "autopsy_report",
+        "description": "Post-mortem report showing cause of death",
+        "type": "documentary",
+        "is_present": true
+      },
+      {
+        "id": "cctv_footage",
+        "description": "CCTV footage showing accused near crime scene",
+        "type": "documentary",
+        "is_present": false
+      },
+      {
+        "id": "fingerprints",
+        "description": "Fingerprints on weapon matching accused",
+        "type": "forensic",
+        "is_present": true
+      }
+    ],
+    "witness_statements": [
+      {
+        "id": "eyewitness",
+        "content": "Person who saw the crime occur",
+        "reliability": 0.913505227362763,
+        "is_contradicting": false
+      },
+      {
+        "id": "neighbor",
+        "content": "Neighbor who heard sounds or knew of prior disputes",
+        "reliability": 0.27143801688074165,
+        "is_contradicting": false
+      },
+      {
+        "id": "medical_officer",
+        "content": "Doctor who conducted autopsy or examined injuries",
+        "reliability": 0.735066661623962,
+        "is_contradicting": false
+      },
+      {
+        "id": "family_member",
+        "content": "Family member testifying about relationship dynamics",
+        "reliability": 0.34675019666512086,
+        "is_contradicting": true
+      }
+    ],
+    "applicable_ipc_sections": [
+      "302",
+      "304"
+    ],
+    "curriculum_level": 3,
+    "precedent_id": "ILDC_2020_045"
+  },
+  "turns": [
+    {
+      "step_type": "actus_reus",
+      "action": {
+        "step_type": "actus_reus",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "fingerprints",
+          "bloodstains"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      },
+      "actor": "agent"
+    },
+    {
+      "step_type": "mens_rea",
+      "action": {
+        "step_type": "mens_rea",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [
+          "eyewitness",
+          "medical_officer"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      },
+      "actor": "agent"
+    },
+    {
+      "step_type": "linkage",
+      "action": {
+        "step_type": "linkage",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "fingerprints",
+          "autopsy_report"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -0.75,
+        "failure_reason": "Linkage requires at least one cited IPC section",
+        "prosecution_challenge": null
+      },
+      "actor": "agent"
+    },
+    {
+      "step_type": "linkage",
+      "action": {
+        "step_type": "linkage",
+        "cited_ipc_sections": [
+          "302"
+        ],
+        "anchored_evidence_ids": [
+          "fingerprints",
+          "autopsy_report",
+          "bloodstains"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      },
+      "actor": "agent"
+    },
+    {
+      "step_type": "counter_argument",
+      "action": {
+        "step_type": "counter_argument",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -1.0,
+        "failure_reason": "Counter Argument requires at least one anchored witness ID or evidence ID",
+        "prosecution_challenge": null
+      },
+      "actor": "agent"
+    },
+    {
+      "step_type": "counter_argument",
+      "action": {
+        "step_type": "counter_argument",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "autopsy_report",
+          "bloodstains"
+        ],
+        "anchored_witness_ids": [
+          "eyewitness"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.5,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      },
+      "actor": "agent"
+    },
+    {
+      "step_type": "ipc_application",
+      "action": {
+        "step_type": "ipc_application",
+        "cited_ipc_sections": [
+          "302",
+          "304"
+        ],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 0.9,
+        "failure_reason": null,
+        "prosecution_challenge": "Prosecution challenge: IPC section(s) 304 cited without prior grounding in steps 1\u20133"
+      },
+      "actor": "agent"
+    },
+    {
+      "step_type": "precedent_citation",
+      "action": {
+        "step_type": "precedent_citation",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": "acquit"
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      },
+      "actor": "agent"
+    }
+  ],
+  "verdict": {
+    "total_reward": 4.65,
+    "valid_steps": 6,
+    "chain_score": 0.75
+  },
+  "human_won": false
+}
