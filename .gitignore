@@ -1,20 +1,29 @@
-# # Python
-# __pycache__/
-# *.py[cod]
-# *$py.class
-
-# # Local/dev artifacts
-# .env
-# venv/
-# .venv/
-
-# # Training artifacts
-# logs/
-# checkpoints/
-# *.pt
-
-# # Human-mode session outputs
-
-# *.pyc
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Local/dev artifacts
+.env
+venv/
+.venv/
+
+# Training artifacts
+logs/
+checkpoints/
+*.pt
+
+# Human-mode session outputs
+human_mode/sessions/
+
+# Gradio / IDE / tool caches
+.gradio/
+.kilo/
+
+# Editor backups
+Dockerfile.save
+
+# OS junk
+.DS_Store
+Thumbs.db

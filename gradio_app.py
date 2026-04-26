@@ -13,6 +13,9 @@ import dataclasses
 import html
 import json
 import os
+
+from dotenv import load_dotenv
+load_dotenv()
 import textwrap
 import random
 import time
@@ -558,7 +561,7 @@ def generate_explanation(
     if not submitted_steps:
         return "No steps completed, so no explanation is available."
 
-    api_key = os.getenv("GEMINI_API_KEY", "AIzaSyB2Z1hUptT35AOgSHWU7O9a1sso7VemKC0").strip()
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         return "Set GEMINI_API_KEY to enable explanations."
 
