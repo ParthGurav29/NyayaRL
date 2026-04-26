@@ -16,3 +16,5 @@
 # # Human-mode session outputs
 
 # *.pyc
+__pycache__/
+*.pyc

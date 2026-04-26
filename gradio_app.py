@@ -91,6 +91,29 @@ _STEP_LABELS = [
 
 BASE_DIR = Path(__file__).resolve().parent
 
+# Client-side theme: html[data-nyaya-theme=light|dark] + localStorage
+_THEME_LOAD_JS = """
+() => {
+  try {
+    const v = localStorage.getItem("nyaya-theme") || "dark";
+    document.documentElement.setAttribute("data-nyaya-theme", v);
+    setTimeout(function() {
+      const root = document.getElementById("nx_theme_picker");
+      if (!root) return;
+      const r = root.querySelectorAll('input[type="radio"]');
+      r.forEach(function(el) { if (el.value === v) { el.click(); } });
+    }, 200);
+  } catch (e) {}
+}
+"""
+
+_THEME_APPLY_JS = """
+(theme) => {
+  try { localStorage.setItem("nyaya-theme", theme); } catch (e) {}
+  document.documentElement.setAttribute("data-nyaya-theme", theme);
+}
+"""
+
 _SESSIONS_DIR = Path(
     os.getenv("NYAYARL_SESSIONS_DIR", str(BASE_DIR / "human_mode" / "sessions"))
 )
@@ -203,7 +226,7 @@ def _load_agent() -> nn.Module:
                 )
                 if res.was_partial_load:
                     print(
-                        "⚠ PARTIAL CHECKPOINT LOAD: model parameters were not fully restored. "
+                        "WARNING: PARTIAL CHECKPOINT LOAD: model parameters were not fully restored. "
                         f"missing={len(res.diff.missing_in_checkpoint)} "
                         f"unexpected={len(res.diff.unexpected_in_checkpoint)} "
                         f"shape_mismatches={len(res.diff.shape_mismatches)} "
@@ -212,9 +235,9 @@ def _load_agent() -> nn.Module:
                     if not allow_legacy:
                         raise RuntimeError("Partial load occurred while legacy loads are disabled.")
                 else:
-                    print("✅ Loaded checkpoint (strict) and verified values.")
+                    print("OK: Loaded checkpoint (strict) and verified values.")
                 print(
-                    f"✓ Loaded checkpoint: {os.path.realpath(str(ckpt_path))} "
+                    f"OK: Loaded checkpoint: {os.path.realpath(str(ckpt_path))} "
                     f"(selected={ckpt_path} dir={_CHECKPOINT_DIR})"
                 )
                 _DEMO_MODE = bool(res.was_partial_load)
@@ -234,14 +257,14 @@ def _load_agent() -> nn.Module:
                         do_value_check=False,
                     )
                     print(
-                        "⚠ Loaded checkpoint with PARTIAL compatibility mode. "
+                        "WARNING: Loaded checkpoint with PARTIAL compatibility mode. "
                         f"missing={len(res.diff.missing_in_checkpoint)} "
                         f"unexpected={len(res.diff.unexpected_in_checkpoint)} "
                         f"shape_mismatches={len(res.diff.shape_mismatches)} "
                         f"legacy={res.was_legacy_remap}"
                     )
                     print(
-                        f"✓ Loaded checkpoint: {os.path.realpath(str(ckpt_path))} "
+                        f"OK: Loaded checkpoint: {os.path.realpath(str(ckpt_path))} "
                         f"(selected={ckpt_path} dir={_CHECKPOINT_DIR})"
                     )
                     _DEMO_MODE = False
@@ -249,7 +272,7 @@ def _load_agent() -> nn.Module:
                     agent.eval()
                     return agent
                 except Exception:
-                    print(f"⚠ Failed to load checkpoint from {ckpt_path}: {e}")
+                    print(f"WARNING: Failed to load checkpoint from {ckpt_path}: {e}")
                 if require_ckpt:
                     raise RuntimeError(
                         f"CRITICAL failure: Checkpoint load failed from {ckpt_path} "
@@ -257,7 +280,7 @@ def _load_agent() -> nn.Module:
                     ) from e
         else:
             print(
-                f"⚠ No step_*.pt found in checkpoint dir: {_CHECKPOINT_DIR} "
+                f"WARNING: No step_*.pt found in checkpoint dir: {_CHECKPOINT_DIR} "
                 f"(set NYAYARL_CHECKPOINT_DIR to override)"
             )
             if require_ckpt:
@@ -266,7 +289,7 @@ def _load_agent() -> nn.Module:
                 )
     else:
         print(
-            f"⚠ Checkpoint dir does not exist: {_CHECKPOINT_DIR} "
+            f"WARNING: Checkpoint dir does not exist: {_CHECKPOINT_DIR} "
             f"(set NYAYARL_CHECKPOINT_DIR to override)"
         )
         if require_ckpt:
@@ -276,7 +299,7 @@ def _load_agent() -> nn.Module:
 
     _DEMO_MODE = True
     _MODEL_LOAD_STATUS = "stub"
-    print("⚠ No trained checkpoint — running in demo mode")
+    print("WARNING: No trained checkpoint — running in demo mode")
     agent = StubDefenceAgent()
     agent.eval()
     return agent
@@ -604,38 +627,7 @@ Write the explanation now. Do not use bullet points. Do not start with "The agen
         return f"Error communicating with Gemini: {e}"
 
 
-_DEMO_CSS = """
-<style>
-.ny-panel { font-family: system-ui, sans-serif; font-size: 14px; }
-.ny-case, .ny-reason { border: 1px solid #ccc; border-radius: 8px; padding: 12px; background: #fafafa; min-height: 200px; }
-.ny-case h3, .ny-reason h3 { margin-top: 0; }
-.ny-list { margin: 0; padding-left: 1.2rem; }
-.ny-rel { color: #555; font-size: 0.9em; }
-.ny-fir { white-space: pre-wrap; font-size: 0.85em; max-height: 220px; overflow: auto; }
-.ny-card { border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #ddd; }
-.ny-card-pending { color: #888; background: #f5f5f5; }
-.ny-card-running { background: #fff8e6; border-color: #e6c200; }
-.ny-spin { display: inline-block; animation: nyspin 0.8s linear infinite; }
-@keyframes nyspin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.ny-card-ok { background: #e8f8e8; border-color: #2a7; }
-.ny-card-bad { background: #fdeaea; border-color: #c33; }
-.ny-card-warn { background: #fff6e0; border-color: #d90; }
-.ny-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; }
-.ny-reward { font-size: 0.9em; color: #333; }
-.ny-sub { font-size: 0.88em; margin-top: 4px; margin-left: 1.2rem; color: #333; }
-.ny-chain { margin-top: 12px; }
-.ny-bar { font-family: monospace; font-size: 1.05em; }
-.ny-pct { margin-left: 8px; }
-.ny-chal { margin-top: 12px; }
-.ny-muted { color: #777; }
-.ny-verdict { margin-top: 14px; padding: 12px; border-radius: 8px; border: 2px solid #888; }
-.ny-verdict-pending { background: #f0f0f0; }
-.ny-verdict-convict { background: #e6f0ff; border-color: #246; }
-.ny-verdict-acquit { background: #e8fff4; border-color: #262; }
-.ny-verdict-partial { background: #f5f0ff; border-color: #626; }
-.ny-vbig { font-size: 1.12em; font-weight: bold; margin-bottom: 6px; }
-</style>
-"""
+from lextrust_css import LEXTRUST_CSS as _LEXTRUST_CSS
 
 
 def _render_case_panel(obs_dict: dict[str, Any] | None) -> str:
@@ -647,28 +639,35 @@ def _render_case_panel(obs_dict: dict[str, Any] | None) -> str:
     ipc = html.escape(", ".join(str(x) for x in cf.get("applicable_ipc_sections", [])))
     fir = html.escape(str(cf.get("fir", ""))[:2500])
 
+    ev_items = cf.get("evidence_items", [])
     ev_lines = []
-    for e in cf.get("evidence_items", []):
+    for e in ev_items:
         mark = "✅" if e.get("is_present") else "❌"
         desc = html.escape(str(e.get("description", e.get("id", ""))))
         ev_lines.append(f"<li>{mark} {desc}</li>")
 
+    wit_items = cf.get("witness_statements", [])
     wit_lines = []
-    for w in cf.get("witness_statements", []):
+    for w in wit_items:
         rel = float(w.get("reliability", 0.0))
         wid = html.escape(str(w.get("id", "")))
         c = html.escape(str(w.get("content", ""))[:100])
         wit_lines.append(f"<li>👤 <code>{wid}</code> {c} <span class='ny-rel'>{rel:.2f}</span></li>")
 
+    ev_count = len(ev_items)
+    wit_count = len(wit_items)
+
     return f"""<div class='ny-case'>
-<h3>Case file</h3>
-<p><b>Case ID:</b> {cid}</p>
-<p><b>Template:</b> {tid}</p>
-<p><b>IPC sections:</b> {ipc}</p>
-<details><summary>FIR</summary><pre class='ny-fir'>{fir}</pre></details>
-<h4>Evidence</h4>
+<h3>⚖️ Case File</h3>
+<div class='ny-meta'>
+<span><b>Case ID:</b> {cid}</span>
+<span><b>Template:</b> {tid}</span>
+<span><b>IPC:</b> {ipc}</span>
+</div>
+<details><summary>📋 FIR Narrative</summary><pre class='ny-fir'>{fir}</pre></details>
+<h4>Evidence <span class='ny-count'>{ev_count}</span></h4>
 <ul class='ny-list'>{"".join(ev_lines) or "<li class='ny-muted'>(none)</li>"}</ul>
-<h4>Witnesses</h4>
+<h4>Witnesses <span class='ny-count'>{wit_count}</span></h4>
 <ul class='ny-list'>{"".join(wit_lines) or "<li class='ny-muted'>(none)</li>"}</ul>
 </div>"""
 
@@ -690,6 +689,7 @@ def _step_card_html(
     valid = bool(sr.get("is_valid"))
     reward = float(sr.get("reward", 0.0))
     rw = f"{reward:+.1f}" if reward != 0.0 else "0.0"
+    rw_cls = "ny-reward-pos" if reward > 0 else ("ny-reward-neg" if reward < 0 else "ny-reward-zero")
 
     stype = str(act.get("step_type", ""))
     if valid and reward == 0.0 and stype == "counter_argument":
@@ -725,46 +725,48 @@ def _step_card_html(
         note_block += f"<div class='ny-sub'><b>Challenge:</b> {html.escape(str(ch))}</div>"
 
     return f"""<div class='ny-card {cls}'><div class='ny-card-head'><span>{icon}</span>
-<b>{html.escape(label)}</b><span class='ny-reward'>reward: {rw}</span></div>
-<div class='ny-sub'><b>Evidence used:</b> {ev_str}</div>
-<div class='ny-sub'><b>Witness used:</b> {w_str}</div>
-<div class='ny-sub'><b>IPC cited:</b> {ipc_str}</div>
+<b>{html.escape(label)}</b><span class='ny-reward {rw_cls}'>{rw}</span></div>
+<div class='ny-sub'><b>Evidence:</b> {ev_str}</div>
+<div class='ny-sub'><b>Witness:</b> {w_str}</div>
+<div class='ny-sub'><b>IPC:</b> {ipc_str}</div>
 {note_block}</div>"""
 
 
 def _chain_bar(pct: float) -> str:
     pct = max(0.0, min(100.0, pct))
-    filled = int(round(pct / 5.0))
-    bar = "█" * filled + "░" * (20 - filled)
-    return f"""<div class='ny-chain'><b>Chain score</b>
-<div class='ny-bar'><span>{html.escape(bar)}</span>
-<span class='ny-pct'>{pct:.1f}%</span></div></div>"""
+    return f"""<div class='ny-chain'><b>Chain Score</b>
+<div class='ny-progress-track'><div class='ny-progress-fill' style='width:{pct:.1f}%'></div></div>
+<div class='ny-pct'>{pct:.1f}%</div></div>"""
 
 
 def _challenges_html(challenges: list[str]) -> str:
     if not challenges:
-        return "<div class='ny-chal'><h4>Prosecution challenges</h4><p class='ny-muted'>(none yet)</p></div>"
-    items = "".join(f"<li>⚔️ {html.escape(c)}</li>" for c in challenges)
-    return f"<div class='ny-chal'><h4>Prosecution challenges raised</h4><ul class='ny-list'>{items}</ul></div>"
+        return "<div class='ny-chal'><h4>Prosecution Challenges</h4><p class='ny-muted'>(none yet)</p></div>"
+    items = "".join(
+        f"<div class='ny-chal-item'><span class='ny-chal-num'>{i+1}</span>{html.escape(c)}</div>"
+        for i, c in enumerate(challenges)
+    )
+    return f"<div class='ny-chal'><h4>Prosecution Challenges <span class='ny-count'>{len(challenges)}</span></h4>{items}</div>"
 
 
 def _verdict_html(obs_dict: dict[str, Any] | None, done: bool) -> str:
-    if not obs_dict:
-        return "<div class='ny-verdict ny-verdict-pending'><b>VERDICT:</b> (pending)</div>"
+    if not obs_dict or not done:
+        return ("<div class='ny-verdict ny-verdict-pending'>"
+                "<div class='ny-verdict-bar'><div class='ny-vbig'>⚖️ VERDICT: Pending</div></div>"
+                "<div class='ny-verdict-body'><span class='ny-muted'>Awaiting argument chain completion.</span></div></div>")
     steps = obs_dict.get("submitted_steps") or []
     cf = obs_dict.get("case_file") or {}
-    if not done:
-        return "<div class='ny-verdict ny-verdict-pending'><b>VERDICT:</b> (pending)</div>"
     if len(steps) < 6:
-        return (
-            "<div class='ny-verdict ny-verdict-partial'><b>Episode ended</b> before all six "
-            "steps completed.</div>"
-        )
+        return ("<div class='ny-verdict ny-verdict-partial'>"
+                "<div class='ny-verdict-bar bar-partial'><div class='ny-vbig'>⚠️ EPISODE ENDED</div></div>"
+                "<div class='ny-verdict-body'>Chain ended before all six steps completed.</div></div>")
 
     last = steps[-1]
     j = last.get("judgment")
     if not j:
-        return "<div class='ny-verdict ny-verdict-pending'><b>VERDICT:</b> (pending)</div>"
+        return ("<div class='ny-verdict ny-verdict-pending'>"
+                "<div class='ny-verdict-bar'><div class='ny-vbig'>⚖️ VERDICT: Pending</div></div>"
+                "<div class='ny-verdict-body'><span class='ny-muted'>Awaiting judgment.</span></div></div>")
 
     jv = str(j).lower()
     j_up = str(j).upper()
@@ -772,19 +774,15 @@ def _verdict_html(obs_dict: dict[str, Any] | None, done: bool) -> str:
     chain_pct = float(obs_dict.get("chain_score", 0.0)) * 100.0
     matched, _gt = _precedent_alignment(cf, jv)
     align = "✅ Precedent matched" if matched else "⚠️ Precedent not matched"
-    if jv == "acquit":
-        css = "ny-verdict-acquit"
-    elif jv == "partial":
-        css = "ny-verdict-partial"
-    else:
-        css = "ny-verdict-convict"
+    bar_cls = "bar-acquit" if jv == "acquit" else ("bar-partial" if jv == "partial" else "")
 
-    return f"""<div class='ny-verdict {css}'>
-<div class='ny-vbig'>⚖️ VERDICT: {html.escape(j_up)}</div>
+    return f"""<div class='ny-verdict'>
+<div class='ny-verdict-bar {bar_cls}'><div class='ny-vbig'>⚖️ VERDICT: {html.escape(j_up)}</div></div>
+<div class='ny-verdict-body'>
 <div><b>Precedent:</b> {pid}</div>
-<div><b>Final chain score:</b> {chain_pct:.1f}%</div>
+<div><b>Chain Score:</b> {chain_pct:.1f}%</div>
 <div><b>Alignment:</b> {html.escape(align)}</div>
-</div>"""
+</div></div>"""
 
 
 def _reasoning_panel_html(
@@ -794,7 +792,7 @@ def _reasoning_panel_html(
     done: bool,
 ) -> str:
     cf = (obs_dict or {}).get("case_file") or {}
-    parts = ["<div class='ny-reason'><h3>Reasoning chain</h3>"]
+    parts = ["<div class='ny-reason'><h3>🔗 Reasoning Chain</h3>"]
     for i, lab in enumerate(_STEP_LABELS):
         c = cards[i] if i < len(cards) else None
         run = running_slot == i
@@ -834,8 +832,8 @@ def _demo_pack_outputs(
     while len(cards) < 6:
         cards.append(None)
     done = bool(state.get("done", False))
-    case_h = _DEMO_CSS + "<div class='ny-panel'>" + _render_case_panel(obs) + "</div>"
-    reason_h = _DEMO_CSS + "<div class='ny-panel'>" + _reasoning_panel_html(obs, cards, running_slot, done) + "</div>"
+    case_h = "<div class='ny-panel'>" + _render_case_panel(obs) + "</div>"
+    reason_h = "<div class='ny-panel'>" + _reasoning_panel_html(obs, cards, running_slot, done) + "</div>"
     busy = running_slot is not None
     api_note = f"API: `{_API_BASE}`"
     explanation_visible = False
@@ -887,7 +885,7 @@ def demo_new_case(category: str, curriculum_level: int, state: dict[str, Any]) -
 
     if err:
         st = _empty_demo_state()
-        msg = _DEMO_CSS + f"<div class='ny-panel'><p style='color:#a33'>{html.escape(err)}</p></div>"
+        msg = f"<div class='ny-panel'><div class='ny-case'><p style='color:#9c3636'>{html.escape(err)}</p></div></div>"
         return (
             msg,
             msg,
@@ -1079,26 +1077,83 @@ def build_app() -> gr.Blocks:
     else:
         demo_banner = ""
 
-    with gr.Blocks(title="NyayaRL ⚖️") as app:
-        gr.Markdown("# NyayaRL — Legal RL agent (courtroom view)")
+    with gr.Blocks(title="NyayaRL — Courtroom") as app:
+        with gr.Column(
+            elem_id="nx_hero_block",
+            elem_classes=["nx-landing", "nx-landing-wrap"],
+            scale=1,
+            min_width=0,
+        ):
+            with gr.Row(elem_id="nx_topbar", elem_classes=["nx-topbar-row"]):
+                gr.HTML(
+                    """
+                    <div class="nx-logo">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                      <span>NyayaRL</span>
+                    </div>
+                    """
+                )
+                with gr.Row(elem_id="nx_topbar_trail", scale=0, elem_classes=["nx-topbar-trail"]):
+                    theme_picker = gr.Radio(
+                        [("🌙", "dark"), ("☀", "light")],
+                        value="dark",
+                        label=None,
+                        show_label=False,
+                        container=False,
+                        elem_id="nx_theme_picker",
+                        elem_classes=["nx-theme-segment"],
+                    )
+                    gr.HTML("""<a class="nx-cta-lets" href="#nx_app_start">Let's Talk</a>""")
+            gr.HTML(
+                """
+                <div id="nx_shell">
+                  <div id="nx_hero">
+                    <div class="nx-hero-cols">
+                      <div class="nx-hero-left">
+                        <div class="nx-scroll-hint" aria-hidden="true">SCROLL ↓</div>
+                        <h1>Multi-agent defence reasoning powered by reinforcement learning. Observe how the AI advocate constructs a six-step argument chain in real time.</h1>
+                      </div>
+                      <div class="nx-hero-right">
+                        <p class="nx-hero-sub">Watch the defence build each step live — actus reus through precedent citation with curriculum level control and local session logs below.</p>
+                        <a class="nx-hero-cta" href="#nx_app_start">Run courtroom demo <span class="nx-cta-arrow" aria-hidden="true">→</span></a>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="nx-feature-cards" aria-label="Product highlights">
+                    <article class="nx-fcard nx-fcard--grey">
+                      <div>
+                        <div class="nx-fcard-ico" aria-hidden="true">⚖</div>
+                        <h3>Argument chain &amp; evidence</h3>
+                      </div>
+                      <a class="nx-fcard-link" href="#nx_app_start">Session log →</a>
+                    </article>
+                    <article class="nx-fcard nx-fcard--image" aria-label="Symbol">
+                      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3rem;opacity:0.45;">⚖</div>
+                    </article>
+                    <article class="nx-fcard nx-fcard--teal">
+                      <div class="nx-fcard-avatar" aria-hidden="true">RL</div>
+                      <p class="nx-fcard-quote">"The six-step chain made our defences easier to review and label."</p>
+                      <div class="nx-fcard-attrib">Research <strong>Lead</strong></div>
+                    </article>
+                  </div>
+                </div>
+                """
+            )
+
         if demo_banner:
             gr.Markdown(demo_banner)
-        gr.Markdown(
-            "Case state is on the FastAPI server (`POST /reset`, `POST /step`). "
-            "Start the API with `uvicorn server.app:app --port 8000` or set `NYAYARL_API_BASE`."
-        )
 
         demo_state = gr.State(_empty_demo_state())
 
-        with gr.Row():
+        with gr.Row(elem_id="nx_app_start"):
             with gr.Column(scale=1):
-                case_html = gr.HTML(value=_DEMO_CSS + "<div class='ny-panel'></div>")
+                case_html = gr.HTML(value="<div class='ny-panel'></div>")
             with gr.Column(scale=1):
-                reasoning_html = gr.HTML(value=_DEMO_CSS + "<div class='ny-panel'></div>")
+                reasoning_html = gr.HTML(value="<div class='ny-panel'></div>")
 
         with gr.Row(visible=False) as explanation_row:
             with gr.Column():
-                gr.Markdown("### 🧠 Why did the agent decide this?")
+                gr.Markdown("### Why did the agent decide this?", elem_id="nx_explain_title")
                 explanation_box = gr.Textbox(
                     label="",
                     lines=5,
@@ -1109,10 +1164,10 @@ def build_app() -> gr.Blocks:
 
         api_status = gr.Markdown(value=f"API: `{_API_BASE}`")
 
-        with gr.Row():
-            new_case_btn = gr.Button("New Case", variant="primary")
-            run_agent_btn = gr.Button("▶ Run Agent", variant="secondary")
-            next_step_btn = gr.Button("Next step (manual)", variant="secondary")
+        with gr.Row(elem_id="nx_controls"):
+            new_case_btn = gr.Button("New Case", variant="primary", elem_id="nx_new_case")
+            run_agent_btn = gr.Button("Run Agent", variant="secondary", elem_id="nx_run_agent")
+            next_step_btn = gr.Button("Next step (manual)", variant="secondary", elem_id="nx_next_step")
             category_dd = gr.Dropdown(
                 choices=["All", "Homicide", "Robbery", "Assault", "Fraud", "Domestic"],
                 value="All",
@@ -1130,6 +1185,8 @@ def build_app() -> gr.Blocks:
                 headers=["Timestamp", "Mode", "Level", "Human Won", "Reward", "Valid Steps"],
                 value=_load_session_logs(),
                 interactive=False,
+                elem_id="nx_session_dataframe",
+                elem_classes=["nx-session-df"],
             )
             refresh_btn.click(fn=refresh_sessions, inputs=[], outputs=[session_table])
 
@@ -1153,6 +1210,9 @@ def build_app() -> gr.Blocks:
 
         run_agent_btn.click(fn=demo_run_agent, inputs=[demo_state], outputs=outs)
         next_step_btn.click(fn=demo_next_step, inputs=[demo_state], outputs=outs)
+
+        app.load(fn=None, inputs=None, outputs=None, js=_THEME_LOAD_JS)
+        theme_picker.input(fn=None, inputs=[theme_picker], outputs=None, js=_THEME_APPLY_JS)
 
     return app
 
@@ -1183,9 +1243,16 @@ if __name__ == "__main__":
     # If the user explicitly set GRADIO_SERVER_PORT, honor it strictly.
     # Otherwise, try a small range so re-running doesn't crash on an occupied port.
     env_port = os.getenv("GRADIO_SERVER_PORT")
+    _allowed = [str(BASE_DIR.resolve())]
+    _launch_kwargs: dict[str, Any] = dict(
+        server_name="127.0.0.1",
+        share=False,
+        css=_LEXTRUST_CSS,
+        allowed_paths=_allowed,
+    )
     if env_port is not None and str(env_port).strip():
         port = int(env_port)
-        app.launch(server_name="127.0.0.1", server_port=port, share=False)
+        app.launch(server_port=port, **_launch_kwargs)
     else:
         base = 7860
         chosen = None
@@ -1196,4 +1263,4 @@ if __name__ == "__main__":
         if chosen is None:
             # Last resort: let Gradio raise a helpful error.
             chosen = base
-        app.launch(server_name="127.0.0.1", server_port=int(chosen), share=False)
+        app.launch(server_port=int(chosen), **_launch_kwargs)

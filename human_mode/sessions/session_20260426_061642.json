@@ -1,0 +1,191 @@
+{
+  "timestamp": "2026-04-26T06:16:42.979538+00:00",
+  "mode": "courtroom_api",
+  "curriculum_level": 1,
+  "case_file": {
+    "case_id": "302_304_homicide_v08_1860",
+    "fir": "FIR (template 302_304_homicide_v08): Culpable Homicide / Murder cases (variant 8)\n\nNotes: Level 1: Single accused, clear evidence. Level 4: Precedent conflict between 302 (murder) and 304 (culpable homicide not amounting to murder) | auto-variant 8",
+    "accused_count": 1,
+    "template_id": "302_304_homicide_v08",
+    "evidence_items": [
+      {
+        "id": "302_304_homicide_v08:weapon",
+        "description": "Bloodstained knife/weapon recovered from scene",
+        "type": "physical",
+        "is_present": true
+      },
+      {
+        "id": "302_304_homicide_v08:bloodstains",
+        "description": "Bloodstains on accused clothing matching victim DNA",
+        "type": "forensic",
+        "is_present": true
+      },
+      {
+        "id": "302_304_homicide_v08:autopsy_report",
+        "description": "Post-mortem report showing cause of death",
+        "type": "documentary",
+        "is_present": true
+      },
+      {
+        "id": "302_304_homicide_v08:cctv_footage",
+        "description": "CCTV footage showing accused near crime scene",
+        "type": "digital",
+        "is_present": false
+      },
+      {
+        "id": "302_304_homicide_v08:fingerprints",
+        "description": "Fingerprints on weapon matching accused",
+        "type": "forensic",
+        "is_present": true
+      }
+    ],
+    "witness_statements": [
+      {
+        "id": "302_304_homicide_v08:eyewitness",
+        "content": "Person who saw the crime occur",
+        "reliability": 0.9349820473935708,
+        "is_contradicting": false
+      },
+      {
+        "id": "302_304_homicide_v08:neighbor",
+        "content": "Neighbor who heard sounds or knew of prior disputes",
+        "reliability": 0.43217572689616257,
+        "is_contradicting": false
+      },
+      {
+        "id": "302_304_homicide_v08:medical_officer",
+        "content": "Doctor who conducted autopsy or examined injuries",
+        "reliability": 0.7512484976588417,
+        "is_contradicting": false
+      },
+      {
+        "id": "302_304_homicide_v08:family_member",
+        "content": "Family member testifying about relationship dynamics",
+        "reliability": 0.7960916294216261,
+        "is_contradicting": true
+      }
+    ],
+    "applicable_ipc_sections": [
+      "302",
+      "304"
+    ],
+    "curriculum_level": 1,
+    "precedent_id": "ILDC_2019_001"
+  },
+  "turns": [
+    {
+      "slot": 0,
+      "action": {
+        "step_type": "actus_reus",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "302_304_homicide_v08:fingerprints"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 1,
+      "action": {
+        "step_type": "mens_rea",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [
+          "302_304_homicide_v08:eyewitness"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 2,
+      "action": {
+        "step_type": "linkage",
+        "cited_ipc_sections": [
+          "304"
+        ],
+        "anchored_evidence_ids": [
+          "302_304_homicide_v08:fingerprints"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 3,
+      "action": {
+        "step_type": "counter_argument",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [
+          "302_304_homicide_v08:eyewitness"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 0.0,
+        "failure_reason": "Counter Argument did not address any raised prosecution challenge",
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 4,
+      "action": {
+        "step_type": "ipc_application",
+        "cited_ipc_sections": [
+          "304"
+        ],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 5,
+      "action": {
+        "step_type": "precedent_citation",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": "convict"
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 12.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    }
+  ],
+  "verdict": {
+    "total_reward": 16.0,
+    "valid_steps": 6,
+    "chain_score": 1.0
+  },
+  "human_won": false
+}
