@@ -179,7 +179,8 @@ def _load_agent() -> nn.Module:
     agent: nn.Module = TrainedDefenceAgent(rng_seed=_SEED)
 
     if _CHECKPOINT_DIR.exists():
-        latest = _CHECKPOINT_DIR / "latest.pt"
+        # latest = _CHECKPOINT_DIR / "latest.pt"
+        latest = _CHECKPOINT_DIR / "step_004999.pt"
         if latest.exists():
             ckpt_path = latest
         else:
