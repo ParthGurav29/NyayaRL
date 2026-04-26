@@ -145,6 +145,20 @@ class Track2CaseGenerator:
                 eligible.append(t)
         if not eligible:
             eligible = self._templates
+        # Optional category oversampling (used for targeted augmentation).
+        # category key is the 2-part IPC prefix: "323_325", "302_304", etc.
+        cat_weights = self._difficulty_params.get("category_weights")
+        if isinstance(cat_weights, dict) and cat_weights:
+            weights: list[float] = []
+            for t in eligible:
+                tid = str(t.get("template_id", ""))
+                parts = tid.split("_")
+                cat = f"{parts[0]}_{parts[1]}" if len(parts) >= 2 else ""
+                w = float(cat_weights.get(cat, 1.0))
+                weights.append(max(0.0, w))
+            if any(w > 0.0 for w in weights):
+                # random.Random.choices is available in py3.11+; use it for stable weighting.
+                return self._rng.choices(eligible, weights=weights, k=1)[0]
         return self._rng.choice(eligible)
 
     def _sample_accused_count(self, curriculum_level: int) -> int:

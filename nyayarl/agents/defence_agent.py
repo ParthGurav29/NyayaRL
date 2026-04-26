@@ -25,6 +25,9 @@ class DefenceAgent(nn.Module):
     ) -> None:
         super().__init__()
         self._rng = random.Random(rng_seed)
+        # Inference-time control: during eval/demo we want a crisp final verdict.
+        # Default: greedy (argmax) for Step 6 judgment when module is in eval mode.
+        self._greedy_step6_judgment_in_eval: bool = True
 
         # Small observation encoder -> logits for discrete choices.
         #
@@ -216,7 +219,8 @@ class DefenceAgent(nn.Module):
 
         judgment = None
         if step_type == StepType.PRECEDENT_CITATION:
-            judgment = self._sample_judgment(logits["judgment_logits"])
+            greedy = (not self.training) and bool(self._greedy_step6_judgment_in_eval)
+            judgment = self._sample_judgment(logits["judgment_logits"], greedy=greedy)
 
         return Action(
             step_type=step_type,
@@ -225,6 +229,14 @@ class DefenceAgent(nn.Module):
             anchored_witness_ids=anchored_witness_ids,
             judgment=judgment,
         )
+
+    def set_greedy_step6_judgment_in_eval(self, enabled: bool) -> None:
+        """
+        Control whether Step 6 judgment is greedy (argmax) in eval mode.
+
+        Training is never affected: when `self.training` is True we always sample.
+        """
+        self._greedy_step6_judgment_in_eval = bool(enabled)
 
     def get_log_prob(self, observation: Observation, action: Action) -> torch.Tensor:
         """
@@ -328,10 +340,13 @@ class DefenceAgent(nn.Module):
         dist = torch.distributions.Categorical(logits=logits[: max_k + 1])
         return dist.log_prob(torch.tensor(k, dtype=torch.int64))
 
-    def _sample_judgment(self, logits: torch.Tensor) -> JudgmentLabel:
+    def _sample_judgment(self, logits: torch.Tensor, *, greedy: bool) -> JudgmentLabel:
         order = [JudgmentLabel.ACQUIT, JudgmentLabel.CONVICT, JudgmentLabel.PARTIAL]
-        dist = torch.distributions.Categorical(logits=logits)
-        idx = int(dist.sample().item())
+        if greedy:
+            idx = int(torch.argmax(logits).item())
+        else:
+            dist = torch.distributions.Categorical(logits=logits)
+            idx = int(dist.sample().item())
         return order[max(0, min(idx, 2))]
 
     def _entropy_count(self, logits: torch.Tensor, *, max_k: int) -> torch.Tensor:

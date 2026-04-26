@@ -16,8 +16,10 @@ PENALTY_CONTRADICTING_WITNESS = -0.25
 PENALTY_UNNECESSARY_IPC = -0.1
 
 # Terminal rewards
-TERMINAL_PRECEDENT_MATCHED = 5.0
-TERMINAL_PRECEDENT_UNMATCHED = -3.0
+# Make the final judgment (precedent match) dominate step-completion shaping.
+# This improves learning of the decision boundary once 6-step success is already ~100%.
+TERMINAL_PRECEDENT_MATCHED = 10.0
+TERMINAL_PRECEDENT_UNMATCHED = -10.0
 TERMINAL_EFFICIENCY_BONUS = 1.0
 TERMINAL_PROSECUTION_PENALTY = -1.0
 TERMINAL_STUCK_PENALTY = -2.0

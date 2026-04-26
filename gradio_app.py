@@ -1,4 +1,4 @@
-
+ 
 """
 gradio_app.py — Gradio adapter for NyayaRL.
 
@@ -17,6 +17,7 @@ import textwrap
 import random
 import time
 import uuid
+import socket
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
@@ -172,8 +173,11 @@ class StubDefenceAgent(nn.Module):
 
 
 def _load_agent() -> nn.Module:
-    """Attempt to load a trained checkpoint. Falls back to stub agent."""
-    global _DEMO_MODE
+
+    """
+    Attempt to load a trained checkpoint. Falls back to stub agent.
+    """
+    global _DEMO_MODE, _MODEL_LOAD_STATUS
     require_ckpt = os.getenv("NYAYARL_REQUIRE_CHECKPOINT") == "1"
     allow_legacy = os.getenv("NYAYARL_ALLOW_LEGACY_CHECKPOINT") == "1"
     agent: nn.Module = TrainedDefenceAgent(rng_seed=_SEED)
@@ -214,10 +218,38 @@ def _load_agent() -> nn.Module:
                     f"(selected={ckpt_path} dir={_CHECKPOINT_DIR})"
                 )
                 _DEMO_MODE = bool(res.was_partial_load)
+                _MODEL_LOAD_STATUS = "partial" if _DEMO_MODE else "strict"
                 agent.eval()
                 return agent
             except Exception as e:
-                print(f"⚠ Failed to load checkpoint from {ckpt_path}: {e}")
+                # If strict load fails, retry once with a partial load (drops mismatched tensors).
+                # This keeps the UI using *mostly* trained weights instead of falling back to demo mode.
+                try:
+                    res = load_defence_agent_checkpoint(
+                        checkpoint_path=ckpt_path,
+                        agent=agent,
+                        map_location="cpu",
+                        require_full_match=False,
+                        allow_legacy_partial=True,
+                        do_value_check=False,
+                    )
+                    print(
+                        "⚠ Loaded checkpoint with PARTIAL compatibility mode. "
+                        f"missing={len(res.diff.missing_in_checkpoint)} "
+                        f"unexpected={len(res.diff.unexpected_in_checkpoint)} "
+                        f"shape_mismatches={len(res.diff.shape_mismatches)} "
+                        f"legacy={res.was_legacy_remap}"
+                    )
+                    print(
+                        f"✓ Loaded checkpoint: {os.path.realpath(str(ckpt_path))} "
+                        f"(selected={ckpt_path} dir={_CHECKPOINT_DIR})"
+                    )
+                    _DEMO_MODE = False
+                    _MODEL_LOAD_STATUS = "partial_compat"
+                    agent.eval()
+                    return agent
+                except Exception:
+                    print(f"⚠ Failed to load checkpoint from {ckpt_path}: {e}")
                 if require_ckpt:
                     raise RuntimeError(
                         f"CRITICAL failure: Checkpoint load failed from {ckpt_path} "
@@ -243,6 +275,7 @@ def _load_agent() -> nn.Module:
             )
 
     _DEMO_MODE = True
+    _MODEL_LOAD_STATUS = "stub"
     print("⚠ No trained checkpoint — running in demo mode")
     agent = StubDefenceAgent()
     agent.eval()
@@ -250,6 +283,8 @@ def _load_agent() -> nn.Module:
 
 
 _agent: nn.Module | None = None
+_DEMO_MODE: bool = False
+_MODEL_LOAD_STATUS: str = "unknown"
 
 
 def _get_agent() -> nn.Module:
@@ -1041,7 +1076,12 @@ def refresh_sessions() -> list[list[str]]:
 def build_app() -> gr.Blocks:
     """Construct the full Gradio interface."""
     _get_agent()
-    demo_banner = "⚠️ **Demo mode** — no trained model loaded. Agent uses heuristic actions." if _DEMO_MODE else ""
+    if _MODEL_LOAD_STATUS == "stub":
+        demo_banner = "⚠️ **Demo mode** — no trained model loaded. Agent uses heuristic actions."
+    elif _MODEL_LOAD_STATUS in ("partial", "partial_compat"):
+        demo_banner = "⚠️ **Checkpoint loaded (partial)** — running trained weights with 1+ mismatched tensor(s) skipped."
+    else:
+        demo_banner = ""
 
     with gr.Blocks(title="NyayaRL ⚖️") as app:
         gr.Markdown("# NyayaRL — Legal RL agent (courtroom view)")
@@ -1134,5 +1174,30 @@ if __name__ == "__main__":
         _SEED = int(args.seed)
 
     app = build_app()
-    port = int(os.getenv("GRADIO_SERVER_PORT", "7860"))
-    app.launch(server_name="127.0.0.1", server_port=port, share=False)
+
+    def _is_port_free(port: int) -> bool:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(("127.0.0.1", int(port)))
+            return True
+        except OSError:
+            return False
+
+    # If the user explicitly set GRADIO_SERVER_PORT, honor it strictly.
+    # Otherwise, try a small range so re-running doesn't crash on an occupied port.
+    env_port = os.getenv("GRADIO_SERVER_PORT")
+    if env_port is not None and str(env_port).strip():
+        port = int(env_port)
+        app.launch(server_name="127.0.0.1", server_port=port, share=False)
+    else:
+        base = 7860
+        chosen = None
+        for p0 in range(base, base + 50):
+            if _is_port_free(p0):
+                chosen = p0
+                break
+        if chosen is None:
+            # Last resort: let Gradio raise a helpful error.
+            chosen = base
+        app.launch(server_name="127.0.0.1", server_port=int(chosen), share=False)

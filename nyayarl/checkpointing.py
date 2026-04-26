@@ -91,6 +91,36 @@ def _remap_legacy_bias_keys(agent_sd: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _maybe_pad_encoder_input(*, checkpoint_sd: dict[str, Any], model: nn.Module) -> dict[str, Any]:
+    """
+    Backward-compat: if the model increased encoder input dim (extra numeric features),
+    older checkpoints may have a smaller `_encoder.0.weight` second dimension.
+
+    If shapes are compatible (same out_features, smaller in_features), pad with zeros.
+    """
+    try:
+        model_sd = model.state_dict()
+        k = "_encoder.0.weight"
+        if k not in checkpoint_sd or k not in model_sd:
+            return checkpoint_sd
+        cw = checkpoint_sd[k]
+        mw = model_sd[k]
+        if not (torch.is_tensor(cw) and torch.is_tensor(mw)):
+            return checkpoint_sd
+        if cw.ndim != 2 or mw.ndim != 2:
+            return checkpoint_sd
+        # Only pad when checkpoint has fewer input features.
+        if cw.shape[0] == mw.shape[0] and cw.shape[1] < mw.shape[1]:
+            pad_cols = int(mw.shape[1] - cw.shape[1])
+            padded = torch.cat([cw, torch.zeros((cw.shape[0], pad_cols), dtype=cw.dtype, device=cw.device)], dim=1)
+            out = dict(checkpoint_sd)
+            out[k] = padded
+            return out
+    except Exception:
+        return checkpoint_sd
+    return checkpoint_sd
+
+
 def _sample_keys_for_value_check(sd: dict[str, Any], *, k: int = 3) -> list[str]:
     # Deterministic: first k tensor keys sorted.
     keys: list[str] = []
@@ -176,6 +206,9 @@ def load_defence_agent_checkpoint(
         agent_sd_to_load = _remap_legacy_bias_keys(raw_agent_sd)
         strict = False
 
+    # Backward-compatible padding for minor input-dim expansions.
+    agent_sd_to_load = _maybe_pad_encoder_input(checkpoint_sd=agent_sd_to_load, model=agent)
+
     diff = diff_checkpoint_vs_model(checkpoint_sd=agent_sd_to_load, model=agent)
     has_any_mismatch = bool(diff.missing_in_checkpoint or diff.unexpected_in_checkpoint or diff.shape_mismatches)
 
@@ -186,6 +219,16 @@ def load_defence_agent_checkpoint(
             f"missing={len(diff.missing_in_checkpoint)} unexpected={len(diff.unexpected_in_checkpoint)} "
             f"shape_mismatches={len(diff.shape_mismatches)} legacy={was_legacy}"
         )
+
+    # Allow partial loads (beyond legacy) only when explicitly enabled.
+    # This supports minor architecture drift (e.g., single head shape change)
+    # while still surfacing a full diff to the caller.
+    if (not require_full_match) and allow_legacy_partial and has_any_mismatch:
+        strict = False
+        # Drop any tensors whose shapes do not match to avoid load_state_dict exceptions.
+        if diff.shape_mismatches:
+            bad = {name for (name, _ckpt, _model) in diff.shape_mismatches}
+            agent_sd_to_load = {k: v for k, v in agent_sd_to_load.items() if k not in bad}
 
     msg = agent.load_state_dict(agent_sd_to_load, strict=strict)
 

@@ -9,7 +9,7 @@ Track 2's judge and prosecution agents plug in via constructor injection.
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, Any
 
 from nyayarl.argument_chain import ArgumentChainValidator
 from nyayarl.models import (
@@ -116,6 +116,17 @@ class NyayaRLEnvironment:
         Calls the case generator to produce a new ``CaseFile`` for the
         given *curriculum_level*. Returns the initial ``Observation``.
         """
+        # Allow Track2-backed generators to receive per-level difficulty params.
+        # (Keeps the env generic; generators that don't support this are unaffected.)
+        try:
+            from training.curriculum import CurriculumManager  # local import to avoid hard dependency at module import
+
+            params: dict[str, Any] = CurriculumManager.get_difficulty_params(int(curriculum_level))
+            if hasattr(self._case_generator, "set_difficulty_params"):
+                self._case_generator.set_difficulty_params(params)  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
         self._case_file = self._case_generator.generate(curriculum_level)
         self._submitted_steps = []
         self._prosecution_challenges = []

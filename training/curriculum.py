@@ -22,6 +22,8 @@ _DIFFICULTY_PARAMS: dict[int, dict] = {
         "evidence_complete": True,
         "contradicting_witnesses": 0,
         "precedent_conflict": False,
+        # Targeted data augmentation: oversample assault bucket during training.
+        "category_weights": {"323_325": 3.0},
     },
     2: {
         "accused_count": 1,
@@ -29,6 +31,7 @@ _DIFFICULTY_PARAMS: dict[int, dict] = {
         "evidence_complete": True,
         "contradicting_witnesses": 1,
         "precedent_conflict": False,
+        "category_weights": {"323_325": 3.0},
     },
     3: {
         "accused_count": 3,
@@ -36,6 +39,7 @@ _DIFFICULTY_PARAMS: dict[int, dict] = {
         "evidence_complete": False,
         "contradicting_witnesses": 2,
         "precedent_conflict": False,
+        "category_weights": {"323_325": 3.0},
     },
     4: {
         "accused_count": 3,
@@ -43,6 +47,7 @@ _DIFFICULTY_PARAMS: dict[int, dict] = {
         "evidence_complete": False,
         "contradicting_witnesses": 2,
         "precedent_conflict": True,
+        "category_weights": {"323_325": 3.0},
     },
 }
 
