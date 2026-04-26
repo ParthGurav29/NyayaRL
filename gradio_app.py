@@ -535,14 +535,14 @@ def generate_explanation(
     if not submitted_steps:
         return "No steps completed, so no explanation is available."
 
-    api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    api_key = os.getenv("GEMINI_API_KEY", "AIzaSyB2Z1hUptT35AOgSHWU7O9a1sso7VemKC0").strip()
     if not api_key:
-        return "Set ANTHROPIC_API_KEY to enable explanations."
+        return "Set GEMINI_API_KEY to enable explanations."
 
     try:
-        import anthropic  # type: ignore
+        import google.generativeai as genai
     except Exception:
-        return "Install `anthropic` to enable explanations."
+        return "Install `google-generativeai` to enable explanations."
 
     evidence_lookup = {
         str(e.get("id")): str(e.get("description", e.get("id", "")))
@@ -594,18 +594,14 @@ Write the explanation now. Do not use bullet points. Do not start with "The agen
     prompt = textwrap.dedent(prompt).strip()
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model=_CLAUDE_MODEL,
-            max_tokens=300,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = getattr(message.content[0], "text", None) if getattr(message, "content", None) else None
-        if not text:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        response = model.generate_content(prompt)
+        if not response.text:
             return "Explanation unavailable (empty response)."
-        return str(text).strip()
-    except Exception:
-        return f"Explanation unavailable. Chain score: {round(float(chain_score) * 100, 1)}%."
+        return str(response.text).strip()
+    except Exception as e:
+        return f"Error communicating with Gemini: {e}"
 
 
 _DEMO_CSS = """

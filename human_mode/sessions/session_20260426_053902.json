@@ -1,0 +1,194 @@
+{
+  "timestamp": "2026-04-26T05:39:02.106868+00:00",
+  "mode": "courtroom_api",
+  "curriculum_level": 1,
+  "case_file": {
+    "case_id": "392_394_397_robbery_v06_9174",
+    "fir": "FIR (template 392_394_397_robbery_v06): Robbery and Dacoity cases (variant 6)\n\nNotes: Level 1: Simple robbery (392). Level 3: Armed robbery (397). Level 4: Dacoity (5+ persons) requires proving group conspiracy. | auto-variant 6",
+    "accused_count": 1,
+    "template_id": "392_394_397_robbery_v06",
+    "evidence_items": [
+      {
+        "id": "392_394_397_robbery_v06:stolen_property_recovered",
+        "description": "Stolen items recovered from accused",
+        "type": "physical",
+        "is_present": true
+      },
+      {
+        "id": "392_394_397_robbery_v06:weapon_robbery",
+        "description": "Weapon used during robbery (knife, gun, blunt object)",
+        "type": "physical",
+        "is_present": true
+      },
+      {
+        "id": "392_394_397_robbery_v06:victim_identification",
+        "description": "Victim identification parade records",
+        "type": "documentary",
+        "is_present": false
+      },
+      {
+        "id": "392_394_397_robbery_v06:cctv_robbery",
+        "description": "CCTV footage of robbery incident",
+        "type": "digital",
+        "is_present": true
+      },
+      {
+        "id": "392_394_397_robbery_v06:fingerprints_scene",
+        "description": "Fingerprints at crime scene matching accused",
+        "type": "forensic",
+        "is_present": false
+      }
+    ],
+    "witness_statements": [
+      {
+        "id": "392_394_397_robbery_v06:victim_robbery",
+        "content": "Person who was robbed",
+        "reliability": 0.4110217580960522,
+        "is_contradicting": false
+      },
+      {
+        "id": "392_394_397_robbery_v06:eyewitness_robbery",
+        "content": "Bystander who saw robbery occur",
+        "reliability": 0.7188172234376582,
+        "is_contradicting": false
+      },
+      {
+        "id": "392_394_397_robbery_v06:shopkeeper_witness",
+        "content": "Shop owner who witnessed or has relevant info",
+        "reliability": 0.9066342473817968,
+        "is_contradicting": false
+      },
+      {
+        "id": "392_394_397_robbery_v06:police_investigator",
+        "content": "Investigating officer",
+        "reliability": 0.7164856398940697,
+        "is_contradicting": false
+      }
+    ],
+    "applicable_ipc_sections": [
+      "392",
+      "394",
+      "397"
+    ],
+    "curriculum_level": 1,
+    "precedent_id": "ILDC_2018_045"
+  },
+  "turns": [
+    {
+      "slot": 0,
+      "action": {
+        "step_type": "actus_reus",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [
+          "392_394_397_robbery_v06:stolen_property_recovered"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 1,
+      "action": {
+        "step_type": "mens_rea",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [
+          "392_394_397_robbery_v06:shopkeeper_witness"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 2,
+      "action": {
+        "step_type": "linkage",
+        "cited_ipc_sections": [
+          "394"
+        ],
+        "anchored_evidence_ids": [
+          "392_394_397_robbery_v06:cctv_robbery"
+        ],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 1.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 3,
+      "action": {
+        "step_type": "counter_argument",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [
+          "392_394_397_robbery_v06:eyewitness_robbery"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 0.0,
+        "failure_reason": "Counter Argument did not address any raised prosecution challenge",
+        "prosecution_challenge": null
+      }
+    },
+    {
+      "slot": 4,
+      "action": {
+        "step_type": "ipc_application",
+        "cited_ipc_sections": [
+          "394",
+          "392",
+          "397"
+        ],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 0.8,
+        "failure_reason": null,
+        "prosecution_challenge": "Prosecution challenge: IPC section(s) 392, 397 cited without prior grounding in steps 1\u20133"
+      }
+    },
+    {
+      "slot": 5,
+      "action": {
+        "step_type": "precedent_citation",
+        "cited_ipc_sections": [],
+        "anchored_evidence_ids": [],
+        "anchored_witness_ids": [],
+        "judgment": "convict"
+      },
+      "step_result": {
+        "is_valid": true,
+        "reward": 12.0,
+        "failure_reason": null,
+        "prosecution_challenge": null
+      }
+    }
+  ],
+  "verdict": {
+    "total_reward": 15.8,
+    "valid_steps": 6,
+    "chain_score": 1.0
+  },
+  "human_won": false
+}
