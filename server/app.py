@@ -18,18 +18,17 @@ from pydantic import BaseModel, Field
 from nyayarl.environment import NyayaRLEnvironment
 from nyayarl.models import Action, JudgmentLabel, StepType
 
-<<<<<<< HEAD
+
 # Track 2 components
 from nyayarl.case_generator import Track2CaseGenerator
 from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
 from nyayarl.agents import JudgeAgent, ProsecutionAgent
 from nyayarl.precedents import PrecedentsDB
-=======
 from nyayarl.agents import JudgeAgent, ProsecutionAgent
 from nyayarl.case_generator import Track2CaseGenerator
 from nyayarl.precedents import PrecedentsDB
 from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
->>>>>>> 34d5b7a99fcf658e1f570823881dcef8b3398b85
+
 
 # ── Global State ─────────────────────────────────────────────────────────────
 
@@ -106,7 +105,6 @@ def _parse_action(body: ActionRequest) -> Action:
     )
 
 
-<<<<<<< HEAD
 # ── Track 2 component factories ──────────────────────────────────────────────
 
 
@@ -121,7 +119,7 @@ def _create_track2_components():
     prosecution = Track2ProsecutionAdapter(prosecution_agent)
 
     return case_generator, judge, prosecution
-=======
+
 # ── Shared Track2-backed dependencies ───────────────────────────────────────
 
 _precedents = PrecedentsDB()
@@ -137,7 +135,7 @@ def _new_environment() -> NyayaRLEnvironment:
         judge=_judge,
         prosecution=_prosecution,
     )
->>>>>>> 34d5b7a99fcf658e1f570823881dcef8b3398b85
+
 
 
 # ── App instance ─────────────────────────────────────────────────────────────
@@ -167,7 +165,7 @@ async def reset(body: ResetRequest) -> JSONResponse:
 
     # Initialize a new environment if this session doesn't exist
     if session_id not in environments:
-<<<<<<< HEAD
+
         case_gen, judge, prosecution = _create_track2_components()
         environments[session_id] = NyayaRLEnvironment(
             case_generator=case_gen,
@@ -175,10 +173,8 @@ async def reset(body: ResetRequest) -> JSONResponse:
             prosecution=prosecution,
         )
 
-=======
         environments[session_id] = _new_environment()
     
->>>>>>> 34d5b7a99fcf658e1f570823881dcef8b3398b85
     env = environments[session_id]
     
     try:

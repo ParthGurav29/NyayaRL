@@ -438,8 +438,9 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument(
         "--config",
-        default="config.yaml",
-        help="Path to training config YAML (default: config.yaml)",
+        default="config_fresh_train.yaml",
+        help="config_fresh_train.yaml",
     )
     args = p.parse_args()
+    
     main(args.config)
