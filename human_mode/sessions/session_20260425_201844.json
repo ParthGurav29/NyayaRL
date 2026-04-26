@@ -1,0 +1,167 @@
+{
+  "timestamp": "2026-04-25T20:18:44.796185+00:00",
+  "mode": "defence",
+  "curriculum_level": 4,
+  "case_file": {
+    "case_id": "302_304_homicide_v11_2506",
+    "fir": "FIR (template 302_304_homicide_v11): Culpable Homicide / Murder cases (variant 11)\n\nNotes: Level 1: Single accused, clear evidence. Level 4: Precedent conflict between 302 (murder) and 304 (culpable homicide not amounting to murder) | auto-variant 11",
+    "accused_count": 2,
+    "template_id": "302_304_homicide_v11",
+    "evidence_items": [
+      {
+        "id": "302_304_homicide_v11:weapon",
+        "description": "Bloodstained knife/weapon recovered from scene",
+        "type": "physical",
+        "is_present": true
+      },
+      {
+        "id": "302_304_homicide_v11:bloodstains",
+        "description": "Bloodstains on accused clothing matching victim DNA",
+        "type": "forensic",
+        "is_present": true
+      },
+      {
+        "id": "302_304_homicide_v11:autopsy_report",
+        "description": "Post-mortem report showing cause of death",
+        "type": "documentary",
+        "is_present": true
+      },
+      {
+        "id": "302_304_homicide_v11:cctv_footage",
+        "description": "CCTV footage showing accused near crime scene",
+        "type": "digital",
+        "is_present": false
+      },
+      {
+        "id": "302_304_homicide_v11:fingerprints",
+        "description": "Fingerprints on weapon matching accused",
+        "type": "forensic",
+        "is_present": true
+      }
+    ],
+    "witness_statements": [
+      {
+        "id": "302_304_homicide_v11:eyewitness",
+        "content": "Person who saw the crime occur",
+        "reliability": 0.5699121563277396,
+        "is_contradicting": false
+      },
+      {
+        "id": "302_304_homicide_v11:neighbor",
+        "content": "Neighbor who heard sounds or knew of prior disputes",
+        "reliability": 0.5221343037619434,
+        "is_contradicting": false
+      },
+      {
+        "id": "302_304_homicide_v11:medical_officer",
+        "content": "Doctor who conducted autopsy or examined injuries",
+        "reliability": 0.6684833370930756,
+        "is_contradicting": false
+      },
+      {
+        "id": "302_304_homicide_v11:family_member",
+        "content": "Family member testifying about relationship dynamics",
+        "reliability": 0.3353184299568401,
+        "is_contradicting": false
+      }
+    ],
+    "applicable_ipc_sections": [
+      "302",
+      "304"
+    ],
+    "curriculum_level": 4,
+    "precedent_id": "ILDC_2019_001"
+  },
+  "turns": [
+    {
+      "step_type": "actus_reus",
+      "action": {
+        "step_type": "actus_reus",
+        "cited_ipc_sections": [
+          "302",
+          "304"
+        ],
+        "anchored_evidence_ids": [
+          "302_304_homicide_v11:weapon",
+          "302_304_homicide_v11:autopsy_report",
+          "302_304_homicide_v11:cctv_footage"
+        ],
+        "anchored_witness_ids": [
+          "302_304_homicide_v11:neighbor",
+          "302_304_homicide_v11:medical_officer",
+          "302_304_homicide_v11:eyewitness"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -0.5,
+        "failure_reason": "Evidence '302_304_homicide_v11:autopsy_report' must be PHYSICAL or FORENSIC for Actus Reus, got documentary",
+        "prosecution_challenge": null
+      },
+      "actor": "human"
+    },
+    {
+      "step_type": "actus_reus",
+      "action": {
+        "step_type": "actus_reus",
+        "cited_ipc_sections": [
+          "302",
+          "304"
+        ],
+        "anchored_evidence_ids": [
+          "302_304_homicide_v11:weapon",
+          "302_304_homicide_v11:autopsy_report",
+          "302_304_homicide_v11:cctv_footage"
+        ],
+        "anchored_witness_ids": [
+          "302_304_homicide_v11:neighbor",
+          "302_304_homicide_v11:medical_officer",
+          "302_304_homicide_v11:eyewitness"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -0.5,
+        "failure_reason": "Evidence '302_304_homicide_v11:autopsy_report' must be PHYSICAL or FORENSIC for Actus Reus, got documentary",
+        "prosecution_challenge": null
+      },
+      "actor": "human"
+    },
+    {
+      "step_type": "actus_reus",
+      "action": {
+        "step_type": "actus_reus",
+        "cited_ipc_sections": [
+          "302",
+          "304"
+        ],
+        "anchored_evidence_ids": [
+          "302_304_homicide_v11:weapon",
+          "302_304_homicide_v11:autopsy_report",
+          "302_304_homicide_v11:cctv_footage"
+        ],
+        "anchored_witness_ids": [
+          "302_304_homicide_v11:neighbor",
+          "302_304_homicide_v11:medical_officer",
+          "302_304_homicide_v11:eyewitness"
+        ],
+        "judgment": null
+      },
+      "step_result": {
+        "is_valid": false,
+        "reward": -2.5,
+        "failure_reason": "Evidence '302_304_homicide_v11:autopsy_report' must be PHYSICAL or FORENSIC for Actus Reus, got documentary",
+        "prosecution_challenge": null
+      },
+      "actor": "human"
+    }
+  ],
+  "verdict": {
+    "total_reward": -3.5,
+    "valid_steps": 0,
+    "chain_score": 0.0
+  },
+  "human_won": false
+}
