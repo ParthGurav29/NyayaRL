@@ -1,0 +1,14 @@
+total_train_steps: 2000
+eval_every: 250
+eval_episodes: 30
+checkpoint_every: 250
+checkpoint_dir: /Users/parthmangeshgurav/Desktop/nyayarl-openenv/checkpoints
+log_dir: /Users/parthmangeshgurav/Desktop/nyayarl-openenv/logs
+G: 16
+lr: 0.001
+clip_epsilon: 0.2
+entropy_coef: 0.05
+entropy_coef_final: 0.01
+entropy_anneal_steps: 10000
+window_size: 100
+promotion_threshold: 0.6
