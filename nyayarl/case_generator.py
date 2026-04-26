@@ -1,10 +1,8 @@
-
-
-
 from __future__ import annotations
 
 import json
 import random
+import zlib
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -21,12 +19,42 @@ def _evidence_type_from_template(value: str) -> EvidenceType:
         return EvidenceType.PHYSICAL
     if v in ("forensic",):
         return EvidenceType.FORENSIC
-    if v in ("documentary", "digital"):
-        # Track 2 uses "digital" in some templates; Track 1 treats these as documentary.
+    if v in ("documentary",):
         return EvidenceType.DOCUMENTARY
+    if v in ("digital",):
+        return EvidenceType.DIGITAL
     if v in ("testimonial",):
         return EvidenceType.TESTIMONIAL
     return EvidenceType.DOCUMENTARY
+
+
+def validate_template_schema(template: dict[str, Any]) -> None:
+    """
+    Best-effort schema validation for Track 2 case templates.
+
+    This runs at startup to fail fast on data issues that would otherwise silently
+    corrupt training rewards.
+    """
+    template_id = str(template.get("template_id", "")).strip() or "<unknown>"
+    evidence_pool = template.get("evidence_pool") or []
+    if not isinstance(evidence_pool, list):
+        raise ValueError(f"Template {template_id}: evidence_pool must be a list")
+
+    for ev in evidence_pool:
+        if not isinstance(ev, dict):
+            raise ValueError(f"Template {template_id}: evidence_pool entries must be objects")
+        if "id" not in ev:
+            raise ValueError(f"Template {template_id}: evidence item missing 'id'")
+        et = str(ev.get("type", "")).lower().strip()
+        _ = _evidence_type_from_template(et)  # raises never; validates mapping exists
+
+    ipc_sections = template.get("ipc_sections", [])
+    if not isinstance(ipc_sections, list):
+        raise ValueError(f"Template {template_id}: ipc_sections must be a list")
+
+    precedents = template.get("precedents", [])
+    if precedents is not None and not isinstance(precedents, list):
+        raise ValueError(f"Template {template_id}: precedents must be a list")
 
 
 class Track2CaseGenerator:
@@ -76,6 +104,13 @@ class Track2CaseGenerator:
 
         precedent_id = self._choose_precedent_id(template)
 
+        # Ensure the episode is procedurally solvable: at least one valid anchor exists
+        # for each of the gating steps (1–3) and a reliable witness exists for step 2.
+        evidence_items, witnesses = self._ensure_minimum_solvable_set(
+            evidence_items=evidence_items,
+            witnesses=witnesses,
+        )
+
         return CaseFile(
             case_id=f"{template_id}_{self._rng.randint(1000, 9999)}",
             template_id=template_id,
@@ -96,7 +131,9 @@ class Track2CaseGenerator:
         templates: list[dict[str, Any]] = []
         for p in sorted(self._templates_dir.glob("*.json")):
             with open(p, "r") as f:
-                templates.append(json.load(f))
+                t = json.load(f)
+                validate_template_schema(t)
+                templates.append(t)
         return templates
 
     def _choose_template_for_level(self, curriculum_level: int) -> dict[str, Any]:
@@ -124,9 +161,23 @@ class Track2CaseGenerator:
 
     def _choose_precedent_id(self, template: dict[str, Any]) -> str:
         precedents = template.get("precedents") or []
-        if isinstance(precedents, list) and precedents:
-            return str(self._rng.choice(precedents))
-        return ""
+        if not precedents:
+            return ""
+
+        # Deterministic selection based on template_id to ensure
+        # the same template always maps to the same precedent
+        template_id = template.get("template_id", "")
+        if not template_id:
+            # Fallback to first precedent if no template_id
+            return str(precedents[0])
+
+        # Use hash of template_id to deterministically select a precedent
+        # This ensures the same template always gets the same precedent
+        # IMPORTANT: Python's built-in hash() is salted per process unless PYTHONHASHSEED is fixed,
+        # which silently changes precedent selection across runs. Use a stable hash instead.
+        hash_value = zlib.crc32(template_id.encode("utf-8", "ignore"))
+        index = int(hash_value) % len(precedents)
+        return str(precedents[index])
 
     def _sample_evidence(self, template: dict[str, Any]) -> list[EvidenceItem]:
         pool = template.get("evidence_pool") or []
@@ -148,8 +199,12 @@ class Track2CaseGenerator:
 
     def _sample_witnesses(self, template: dict[str, Any]) -> list[WitnessStatement]:
         pool = template.get("witness_pool") or []
-        reliability_bias = float(self._difficulty_params.get("witness_reliability_bias", 0.0))
-        contradiction_prob = float(self._difficulty_params.get("contradiction_prob", 0.1))
+        reliability_bias = float(
+            self._difficulty_params.get("witness_reliability_bias", 0.0)
+        )
+        contradiction_prob = float(
+            self._difficulty_params.get("contradiction_prob", 0.1)
+        )
         witnesses: list[WitnessStatement] = []
         for w in pool:
             a = float(w.get("reliability_alpha", 6))
@@ -167,3 +222,73 @@ class Track2CaseGenerator:
             )
         return witnesses
 
+    def _ensure_minimum_solvable_set(
+        self,
+        *,
+        evidence_items: list[EvidenceItem],
+        witnesses: list[WitnessStatement],
+    ) -> tuple[list[EvidenceItem], list[WitnessStatement]]:
+        """
+        Guarantee at least one valid candidate exists for the validator/agent masks:
+
+        - Step 1 (Actus Reus): a present PHYSICAL or FORENSIC evidence item
+        - Step 2 (Mens Rea): a witness with reliability > 0.5
+        - Step 3 (Linkage): a present DOCUMENTARY, DIGITAL, or FORENSIC evidence item
+
+        Without these, the DefenceAgent's action masking can force k=0 and make an
+        episode impossible to complete (successes collapse to 0 in eval).
+        """
+        # Evidence: Step 1 candidates
+        step1_ok = any(
+            e.is_present and e.type in (EvidenceType.PHYSICAL, EvidenceType.FORENSIC)
+            for e in evidence_items
+        )
+        if not step1_ok:
+            candidates = [
+                e for e in evidence_items
+                if e.type in (EvidenceType.PHYSICAL, EvidenceType.FORENSIC)
+            ]
+            if candidates:
+                pick = self._rng.choice(candidates)
+                evidence_items = [
+                    replace(e, is_present=True) if e.id == pick.id else e
+                    for e in evidence_items
+                ]
+            elif evidence_items:
+                # Some domains (e.g., fraud) may have only documentary/digital evidence.
+                # To keep episodes solvable under the Step-1 rule, promote one present
+                # evidence item to FORENSIC.
+                pick = self._rng.choice(evidence_items)
+                evidence_items = [
+                    replace(e, is_present=True, type=EvidenceType.FORENSIC) if e.id == pick.id else e
+                    for e in evidence_items
+                ]
+
+        # Evidence: Step 3 candidates
+        step3_ok = any(
+            e.is_present and e.type in (EvidenceType.DOCUMENTARY, EvidenceType.DIGITAL, EvidenceType.FORENSIC)
+            for e in evidence_items
+        )
+        if not step3_ok:
+            candidates = [
+                e for e in evidence_items
+                if e.type in (EvidenceType.DOCUMENTARY, EvidenceType.DIGITAL, EvidenceType.FORENSIC)
+            ]
+            if candidates:
+                pick = self._rng.choice(candidates)
+                evidence_items = [
+                    replace(e, is_present=True) if e.id == pick.id else e
+                    for e in evidence_items
+                ]
+
+        # Witnesses: Step 2 candidates
+        step2_ok = any(w.reliability > 0.5 for w in witnesses)
+        if not step2_ok and witnesses:
+            pick = self._rng.choice(witnesses)
+            # Bump reliability just above the strict cutoff.
+            witnesses = [
+                replace(w, reliability=0.51) if w.id == pick.id else w
+                for w in witnesses
+            ]
+
+        return evidence_items, witnesses

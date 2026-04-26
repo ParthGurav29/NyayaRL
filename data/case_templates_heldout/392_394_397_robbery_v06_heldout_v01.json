@@ -1,0 +1,121 @@
+{
+  "description": "Robbery and Dacoity cases (variant 6)",
+  "difficulty_range": [
+    1,
+    4
+  ],
+  "evidence_pool": [
+    {
+      "actus_reus_weight": 0.85,
+      "description": "Victim identification parade records",
+      "id": "392_394_397_robbery_v06:victim_identification",
+      "presence_prob": 0.95,
+      "type": "documentary"
+    },
+    {
+      "actus_reus_weight": 0.85,
+      "description": "Fingerprints at crime scene matching accused",
+      "id": "392_394_397_robbery_v06:fingerprints_scene",
+      "presence_prob": 0.5262266682605712,
+      "type": "forensic"
+    },
+    {
+      "actus_reus_weight": 0.95,
+      "description": "Stolen items recovered from accused",
+      "id": "392_394_397_robbery_v06:stolen_property_recovered",
+      "presence_prob": 0.95,
+      "type": "physical"
+    },
+    {
+      "actus_reus_weight": 0.9,
+      "description": "CCTV footage of robbery incident",
+      "id": "392_394_397_robbery_v06:cctv_robbery",
+      "presence_prob": 0.348956561011403,
+      "type": "digital"
+    },
+    {
+      "actus_reus_weight": 0.9,
+      "description": "Weapon used during robbery (knife, gun, blunt object)",
+      "id": "392_394_397_robbery_v06:weapon_robbery",
+      "presence_prob": 0.5904354328874231,
+      "type": "physical"
+    }
+  ],
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "key_evidence": [
+      "stolen_property_recovered",
+      "victim_identification"
+    ],
+    "key_witnesses": [
+      "victim_robbery",
+      "eyewitness_robbery"
+    ],
+    "min_argument_steps": 6
+  },
+  "ipc_sections": [
+    "397"
+  ],
+  "notes": "Level 1: Simple robbery (392). Level 3: Armed robbery (397). Level 4: Dacoity (5+ persons) requires proving group conspiracy. | auto-variant 6\n\n[HELDOUT_VARIANT] generated for eval harness",
+  "precedents": [
+    "ILDC_2020_089",
+    "ILDC_2021_134",
+    "ILDC_2016_012",
+    "ILDC_2018_045"
+  ],
+  "template_id": "392_394_397_robbery_v06_heldout_v01",
+  "witness_pool": [
+    {
+      "description": "Bystander who saw robbery occur",
+      "id": "392_394_397_robbery_v06:eyewitness_robbery",
+      "mens_rea_keywords": [
+        "saw",
+        "witnessed",
+        "identified",
+        "clear"
+      ],
+      "reliability_alpha": 3.3658049148167826,
+      "reliability_beta": 3.5742956308767817,
+      "type": "eyewitness"
+    },
+    {
+      "description": "Person who was robbed",
+      "id": "392_394_397_robbery_v06:victim_robbery",
+      "mens_rea_keywords": [
+        "threatened",
+        "force",
+        "demanded",
+        "snatched"
+      ],
+      "reliability_alpha": 4.960145660709685,
+      "reliability_beta": 2.378440260539318,
+      "type": "eyewitness"
+    },
+    {
+      "description": "Shop owner who witnessed or has relevant info",
+      "id": "392_394_397_robbery_v06:shopkeeper_witness",
+      "mens_rea_keywords": [
+        "entered",
+        "demanded",
+        "threatened",
+        "fled"
+      ],
+      "reliability_alpha": 4.3318675772439885,
+      "reliability_beta": 3.3408941833563803,
+      "type": "character"
+    },
+    {
+      "description": "Investigating officer",
+      "id": "392_394_397_robbery_v06:police_investigator",
+      "mens_rea_keywords": [
+        "recovered",
+        "arrested",
+        "identification",
+        "confession"
+      ],
+      "reliability_alpha": 3.6537348088730033,
+      "reliability_beta": 1.4859925221609194,
+      "type": "expert"
+    }
+  ]
+}

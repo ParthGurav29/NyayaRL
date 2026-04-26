@@ -1,4 +1,3 @@
-
 """
 run_training.py — Entry point for the NyayaRL training pipeline.
 
@@ -9,6 +8,7 @@ Nothing novel lives here — it just orchestrates.
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -16,10 +16,18 @@ from collections import deque
 from pathlib import Path
 from typing import Any
 
+# Ensure repo root is on sys.path when invoked as:
+#   python training/run_training.py
+# (Otherwise Python adds only ./training, and `import nyayarl` fails.)
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
 import torch
 import torch.nn as nn
 import yaml
 
+from nyayarl.checkpointing import load_defence_agent_checkpoint
 from nyayarl.environment import NyayaRLEnvironment
 from nyayarl.models import (
     Action,
@@ -32,13 +40,16 @@ from nyayarl.models import (
     Verdict,
     WitnessStatement,
 )
+from nyayarl.agents import DefenceAgent, JudgeAgent, ProsecutionAgent
+from nyayarl.case_generator import Track2CaseGenerator
+from nyayarl.precedents import PrecedentsDB
+from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
 from training.curriculum import CurriculumManager
 from training.grpo_trainer import GRPOTrainer
 
 # ── Required config keys ────────────────────────────────────────────────────
 
 _REQUIRED_CONFIG_KEYS = [
-
     "total_train_steps",
     "eval_every",
     "eval_episodes",
@@ -49,10 +60,11 @@ _REQUIRED_CONFIG_KEYS = [
     "lr",
     "clip_epsilon",
     "entropy_coef",
+    "entropy_coef_final",
+    "entropy_anneal_steps",
     "window_size",
     "promotion_threshold",
 ]
-
 
 
 # ── Config loading + validation ─────────────────────────────────────────────
@@ -80,91 +92,9 @@ def load_config(path: str) -> dict[str, Any]:
     return config
 
 
-# ── Stub dependencies (replaced when Track 2/3 deliver real ones) ───────────
-
-_STEP_SEQUENCE = [
-    StepType.ACTUS_REUS,
-    StepType.MENS_REA,
-    StepType.LINKAGE,
-    StepType.COUNTER_ARGUMENT,
-    StepType.IPC_APPLICATION,
-    StepType.PRECEDENT_CITATION,
-]
-
-
-class StubCaseGenerator:
-    """Generates a structurally valid case file for any curriculum level."""
-
-    def generate(self, curriculum_level: int) -> CaseFile:
-        return CaseFile(
-            case_id=f"TRAIN_{curriculum_level:03d}",
-            fir="[Stub FIR] Placeholder first information report.",
-            accused_count=1,
-            evidence_items=[
-                EvidenceItem(id="E1", description="Physical evidence", type=EvidenceType.PHYSICAL, is_present=True),
-                EvidenceItem(id="E2", description="Forensic evidence", type=EvidenceType.FORENSIC, is_present=True),
-                EvidenceItem(id="E3", description="Documentary evidence", type=EvidenceType.DOCUMENTARY, is_present=True),
-            ],
-            witness_statements=[
-                WitnessStatement(id="W1", content="Witness statement", reliability=0.85, is_contradicting=False),
-            ],
-            applicable_ipc_sections=["302", "307", "34"],
-            curriculum_level=curriculum_level,
-            precedent_id="ILDC_STUB_001",
-        )
-
-
-class StubJudge:
-    """Returns a placeholder verdict."""
-
-    def evaluate(self, case_file: CaseFile, submitted_steps: list[Action]) -> Verdict:
-        judgment = JudgmentLabel.PARTIAL
-        if submitted_steps and submitted_steps[-1].judgment is not None:
-            judgment = submitted_steps[-1].judgment
-        return Verdict(
-            judgment=judgment,
-            matched_precedent_id=case_file.precedent_id,
-            precedent_matched=True,
-            total_reward=0.0,
-            prosecution_win_rate=0.2,
-        )
-
-
-class StubDefenceAgent(nn.Module):
-    """
-    Minimal trainable agent that follows the perfect 6-step path.
-
-    Stands in until Track 3 delivers the real policy network.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._policy_head = nn.Linear(1, 1)  # learnable params for gradient flow
-
-    def select_action(self, observation: Observation) -> Action:
-        step_idx = min(len(observation.submitted_steps), 5)
-        step_type = _STEP_SEQUENCE[step_idx]
-
-        if step_type == StepType.ACTUS_REUS:
-            return Action(step_type=step_type, anchored_evidence_ids=["E1"])
-        elif step_type == StepType.MENS_REA:
-            return Action(step_type=step_type, anchored_witness_ids=["W1"])
-        elif step_type == StepType.LINKAGE:
-            return Action(step_type=step_type, anchored_evidence_ids=["E3"], cited_ipc_sections=["302"])
-        elif step_type == StepType.COUNTER_ARGUMENT:
-            return Action(step_type=step_type, anchored_witness_ids=["W1"])
-        elif step_type == StepType.IPC_APPLICATION:
-            return Action(step_type=step_type, cited_ipc_sections=["302"])
-        else:  # PRECEDENT_CITATION
-            return Action(step_type=step_type, judgment=JudgmentLabel.CONVICT, anchored_evidence_ids=["ILDC_STUB_001"])
-
-    def get_log_prob(self, observation: Observation, action: Action) -> torch.Tensor:
-        x = self._policy_head(torch.tensor([1.0]))
-        return -1.0 + x.squeeze() * 0.01
-
-    def get_entropy(self, observation: Observation) -> torch.Tensor:
-        x = self._policy_head(torch.tensor([1.0]))
-        return torch.tensor(1.0) + x.squeeze() * 0.001
+# NOTE:
+# Training uses the real Track2-backed environment + real `nyayarl.agents.DefenceAgent`.
+# Any older stub implementations have been removed to avoid accidental "no-op learning".
 
 
 # ── Checkpointing ───────────────────────────────────────────────────────────
@@ -187,6 +117,8 @@ def save_checkpoint(
 
     torch.save(
         {
+            "checkpoint_format_version": 2,
+            "agent_arch_inventory": {k: tuple(v.shape) for k, v in agent.state_dict().items() if hasattr(v, "shape")},
             "step": step,
             "agent_state_dict": agent.state_dict(),
             "optimiser_state_dict": optimiser.state_dict(),
@@ -206,10 +138,34 @@ def load_checkpoint(
     """
     Load training state from a checkpoint file. Returns the step to resume from.
     """
-    checkpoint = torch.load(path, weights_only=False)
+    # Training should never silently resume with random weights. If a checkpoint
+    # does not fully match the current agent architecture, we refuse to load it.
+    res = load_defence_agent_checkpoint(
+        checkpoint_path=path,
+        agent=agent,
+        map_location="cpu",
+        require_full_match=True,
+        allow_legacy_partial=False,
+        do_value_check=True,
+    )
+    if res.was_partial_load:
+        raise RuntimeError(
+            f"Refusing partial checkpoint load during training resume: {path} "
+            f"(missing={len(res.diff.missing_in_checkpoint)} unexpected={len(res.diff.unexpected_in_checkpoint)} "
+            f"shape_mismatches={len(res.diff.shape_mismatches)} legacy={res.was_legacy_remap})"
+        )
+    checkpoint = torch.load(path, weights_only=False, map_location="cpu")
+    print(f"✅ Loaded checkpoint (strict) from {path.name}")
 
-    agent.load_state_dict(checkpoint["agent_state_dict"])
-    optimiser.load_state_dict(checkpoint["optimiser_state_dict"])
+    # Optimiser state must match the current parameter set exactly.
+    # Old checkpoints lack encoder params → param group mismatch → skip.
+    try:
+        optimiser.load_state_dict(checkpoint["optimiser_state_dict"])
+    except (RuntimeError, ValueError):
+        print(
+            f"Warning: Optimiser state mismatch in {path.name}. "
+            "Starting with fresh optimiser state."
+        )
 
     # Restore curriculum level
     curriculum._level = checkpoint["curriculum_level"]
@@ -265,15 +221,11 @@ def run_eval(
             ep_reward += step_result.reward
             ep_steps += 1
 
-        # Check if the episode succeeded (all 6 valid steps)
-        valid_count = sum(
-            1 for a in observation.submitted_steps
-        )
-        matched = valid_count == 6
+        # Track judgment/precedent match when the episode succeeds.
+        verdict = env.get_last_verdict()
+        matched = bool(verdict.precedent_matched) if verdict is not None else False
 
-        challenges = sum(
-            1 for c in observation.prosecution_challenges
-        )
+        challenges = sum(1 for c in observation.prosecution_challenges)
         pwr = challenges / ep_steps if ep_steps > 0 else 0.0
 
         total_rewards.append(ep_reward)
@@ -365,10 +317,15 @@ def main(config_path: str = "config.yaml") -> None:
     print(f"  G: {config['G']}, lr: {config['lr']}")
     print()
 
-    # 2. Instantiate environment
+    # 2. Instantiate Track 2-backed environment
+    precedents = PrecedentsDB()
+    judge = Track2JudgeAdapter(JudgeAgent(), precedents)
+    prosecution = Track2ProsecutionAdapter(ProsecutionAgent())
+    case_generator = Track2CaseGenerator()
     env = NyayaRLEnvironment(
-        case_generator=StubCaseGenerator(),
-        judge=StubJudge(),
+        case_generator=case_generator,
+        judge=judge,
+        prosecution=prosecution,
     )
 
     # 3. Instantiate curriculum manager
@@ -379,7 +336,7 @@ def main(config_path: str = "config.yaml") -> None:
     )
 
     # 4. Instantiate defence agent
-    agent = StubDefenceAgent()
+    agent = DefenceAgent()
 
     # 5. Instantiate GRPO trainer
     trainer = GRPOTrainer(
@@ -389,6 +346,8 @@ def main(config_path: str = "config.yaml") -> None:
         lr=config["lr"],
         clip_epsilon=config["clip_epsilon"],
         entropy_coef=config["entropy_coef"],
+        entropy_coef_final=config["entropy_coef_final"],
+        entropy_anneal_steps=config["entropy_anneal_steps"],
     )
 
     # 6. Set up logger
@@ -402,9 +361,16 @@ def main(config_path: str = "config.yaml") -> None:
     start_step = 0
     latest_ckpt = find_latest_checkpoint(checkpoint_dir)
     if latest_ckpt is not None:
-        start_step = load_checkpoint(latest_ckpt, agent, trainer.optimiser, curriculum)
-        print(f"Resumed from checkpoint: {latest_ckpt} (step {start_step})")
-        start_step += 1  # resume from the NEXT step
+        try:
+            start_step = load_checkpoint(latest_ckpt, agent, trainer.optimiser, curriculum)
+            print(f"Resumed from checkpoint: {latest_ckpt} (step {start_step})")
+            start_step += 1  # resume from the NEXT step
+        except Exception as exc:
+            print(
+                "⚠ Checkpoint resume failed (refusing partial / legacy loads). "
+                f"Starting fresh instead. checkpoint={latest_ckpt} error={exc}"
+            )
+            start_step = 0
     else:
         print("No checkpoint found — starting fresh.")
     print()
@@ -420,7 +386,7 @@ def main(config_path: str = "config.yaml") -> None:
         level = curriculum.level
 
         # 2. Train step
-        metrics = trainer.train_step(level)
+        metrics = trainer.train_step(level, global_step=step)
 
         # 3. Record each episode from the last group rollout
         for rollout in trainer.last_rollouts:
@@ -469,5 +435,11 @@ def main(config_path: str = "config.yaml") -> None:
 
 
 if __name__ == "__main__":
-    config_file = sys.argv[1] if len(sys.argv) > 1 else "config.yaml"
-    main(config_file)
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "--config",
+        default="config.yaml",
+        help="Path to training config YAML (default: config.yaml)",
+    )
+    args = p.parse_args()
+    main(args.config)

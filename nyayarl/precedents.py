@@ -6,6 +6,7 @@ Loads and provides access to ILDC precedent judgments.
 
 import json
 import random
+import zlib
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
@@ -41,11 +42,14 @@ class PrecedentsDB:
                 case_id = data.get("case_id", file_path.stem)
                 self.precedents[case_id] = data
 
-                # Index by category
-                category = data.get("template_category", "unknown")
-                if category not in self.precedents_by_category:
-                    self.precedents_by_category[category] = []
-                self.precedents_by_category[category].append(case_id)
+                # Index by 2-part IPC prefix (e.g. "302_304" from "302_304_homicide")
+                full_cat = data.get("template_category", "unknown")
+                parts = full_cat.split("_")
+                prefix = f"{parts[0]}_{parts[1]}" if len(parts) >= 2 else full_cat
+
+                if prefix not in self.precedents_by_category:
+                    self.precedents_by_category[prefix] = []
+                self.precedents_by_category[prefix].append(case_id)
 
                 # Index by IPC section
                 for ipc in data.get("ipc_sections", []):
@@ -97,9 +101,15 @@ class PrecedentsDB:
         if not precedents:
             return None
 
-        # Return a random precedent as ground truth for this episode
-        # In practice, the case generator will select one specific precedent
-        precedent = random.choice(precedents)
+        # Deterministic ground truth: same template_id -> same precedent choice.
+        #
+        # Randomness belongs in case generation (evidence presence, witness configs),
+        # not in what the "correct answer" is.
+        key = str(case_template_id)
+        # IMPORTANT: Python's built-in hash() is salted per process unless PYTHONHASHSEED is fixed.
+        # A salted hash silently changes "ground truth" between runs. Use a stable hash.
+        idx = int(zlib.crc32(key.encode("utf-8", "ignore"))) % len(precedents)
+        precedent = precedents[idx]
 
         return {
             "judgment": precedent.get("judgment"),

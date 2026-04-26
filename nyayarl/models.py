@@ -41,6 +41,7 @@ class EvidenceType(Enum):
     PHYSICAL = "physical"
     FORENSIC = "forensic"
     DOCUMENTARY = "documentary"
+    DIGITAL = "digital"
     TESTIMONIAL = "testimonial"
 
 

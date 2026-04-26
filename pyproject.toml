@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nyayarl-openenv"
+version = "0.1.0"
+description = "NyayaRL: Indian legal reasoning RL environment + training + Gradio demo"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.136.0",
+  "gradio>=4.0.0",
+  "pydantic>=2.0.0",
+  "python-dotenv>=1.0.0",
+  "PyYAML>=6.0.0",
+  "torch>=2.2.0",
+  "uvicorn>=0.30.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nyayarl*", "training*", "server*", "rewards*", "human_mode*"]
+

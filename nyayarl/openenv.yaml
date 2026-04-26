@@ -1,0 +1,18 @@
+version: 1
+
+# OpenEnv-style remote environment config for NyayaRL.
+# If `mode` is "remote", NyayaRL uses the HTTP API mounted at `{base_url}/api`.
+# If `mode` is "local", NyayaRL runs the environment in-process (no HTTP).
+mode: local  # local | remote
+
+remote:
+  # Example for HF Spaces:
+  # base_url: "https://<your-space>.hf.space"
+  base_url: "http://127.0.0.1:7860"
+  api_path: "/api"
+  timeout_seconds: 30
+
+session:
+  # Client session id to reuse across calls (optional).
+  # If empty, caller should generate one (uuid).
+  session_id: ""

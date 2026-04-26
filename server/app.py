@@ -18,11 +18,18 @@ from pydantic import BaseModel, Field
 from nyayarl.environment import NyayaRLEnvironment
 from nyayarl.models import Action, JudgmentLabel, StepType
 
+<<<<<<< HEAD
 # Track 2 components
 from nyayarl.case_generator import Track2CaseGenerator
 from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
 from nyayarl.agents import JudgeAgent, ProsecutionAgent
 from nyayarl.precedents import PrecedentsDB
+=======
+from nyayarl.agents import JudgeAgent, ProsecutionAgent
+from nyayarl.case_generator import Track2CaseGenerator
+from nyayarl.precedents import PrecedentsDB
+from nyayarl.track2_adapters import Track2JudgeAdapter, Track2ProsecutionAdapter
+>>>>>>> 34d5b7a99fcf658e1f570823881dcef8b3398b85
 
 # ── Global State ─────────────────────────────────────────────────────────────
 
@@ -99,6 +106,7 @@ def _parse_action(body: ActionRequest) -> Action:
     )
 
 
+<<<<<<< HEAD
 # ── Track 2 component factories ──────────────────────────────────────────────
 
 
@@ -113,6 +121,23 @@ def _create_track2_components():
     prosecution = Track2ProsecutionAdapter(prosecution_agent)
 
     return case_generator, judge, prosecution
+=======
+# ── Shared Track2-backed dependencies ───────────────────────────────────────
+
+_precedents = PrecedentsDB()
+_judge = Track2JudgeAdapter(JudgeAgent(), _precedents)
+_prosecution = Track2ProsecutionAdapter(ProsecutionAgent())
+
+
+def _new_environment() -> NyayaRLEnvironment:
+    # Per-session generator to avoid shared RNG state between users.
+    case_generator = Track2CaseGenerator()
+    return NyayaRLEnvironment(
+        case_generator=case_generator,
+        judge=_judge,
+        prosecution=_prosecution,
+    )
+>>>>>>> 34d5b7a99fcf658e1f570823881dcef8b3398b85
 
 
 # ── App instance ─────────────────────────────────────────────────────────────
@@ -128,7 +153,11 @@ app = FastAPI(
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Liveness check for Docker and deployment."""
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "precedents_loaded": str(len(_precedents.get_all_case_ids())),
+        "sessions": str(len(environments)),
+    }
 
 
 @app.post("/reset")
@@ -138,6 +167,7 @@ async def reset(body: ResetRequest) -> JSONResponse:
 
     # Initialize a new environment if this session doesn't exist
     if session_id not in environments:
+<<<<<<< HEAD
         case_gen, judge, prosecution = _create_track2_components()
         environments[session_id] = NyayaRLEnvironment(
             case_generator=case_gen,
@@ -145,6 +175,10 @@ async def reset(body: ResetRequest) -> JSONResponse:
             prosecution=prosecution,
         )
 
+=======
+        environments[session_id] = _new_environment()
+    
+>>>>>>> 34d5b7a99fcf658e1f570823881dcef8b3398b85
     env = environments[session_id]
     
     try:

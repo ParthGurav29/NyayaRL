@@ -1,12 +1,18 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Local/dev artifacts
 .env
+venv/
+.venv/
+
+# Training artifacts
 logs/
 checkpoints/
-human_mode/sessions/
-venv/
 *.pt
-__pycache__/ 
+
+# Human-mode session outputs
+
 *.pyc
-venv/
-human_mode/sessions/

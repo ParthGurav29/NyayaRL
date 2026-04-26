@@ -1,0 +1,124 @@
+{
+  "template_id": "302_304_homicide_v01",
+  "description": "Culpable Homicide / Murder cases (variant 1)",
+  "ipc_sections": [
+    302,
+    304
+  ],
+  "difficulty_range": [
+    1,
+    4
+  ],
+  "evidence_pool": [
+    {
+      "id": "302_304_homicide_v01:weapon",
+      "type": "physical",
+      "description": "Bloodstained knife/weapon recovered from scene",
+      "actus_reus_weight": 0.9,
+      "presence_prob": 0.7803031498652399
+    },
+    {
+      "id": "302_304_homicide_v01:bloodstains",
+      "type": "forensic",
+      "description": "Bloodstains on accused clothing matching victim DNA",
+      "actus_reus_weight": 0.85,
+      "presence_prob": 0.8306869165761213
+    },
+    {
+      "id": "302_304_homicide_v01:autopsy_report",
+      "type": "documentary",
+      "description": "Post-mortem report showing cause of death",
+      "actus_reus_weight": 0.95,
+      "presence_prob": 0.8799661437594151
+    },
+    {
+      "id": "302_304_homicide_v01:cctv_footage",
+      "type": "digital",
+      "description": "CCTV footage showing accused near crime scene",
+      "actus_reus_weight": 0.7,
+      "presence_prob": 0.6015510549423073
+    },
+    {
+      "id": "302_304_homicide_v01:fingerprints",
+      "type": "forensic",
+      "description": "Fingerprints on weapon matching accused",
+      "actus_reus_weight": 0.9,
+      "presence_prob": 0.7624477238315799
+    }
+  ],
+  "witness_pool": [
+    {
+      "id": "302_304_homicide_v01:eyewitness",
+      "type": "eyewitness",
+      "description": "Person who saw the crime occur",
+      "mens_rea_keywords": [
+        "intent",
+        "threat",
+        "argument",
+        "angry",
+        "shouted"
+      ],
+      "reliability_alpha": 6,
+      "reliability_beta": 3
+    },
+    {
+      "id": "302_304_homicide_v01:neighbor",
+      "type": "character",
+      "description": "Neighbor who heard sounds or knew of prior disputes",
+      "mens_rea_keywords": [
+        "motive",
+        "history",
+        "fight",
+        "quarrel",
+        "previous"
+      ],
+      "reliability_alpha": 4,
+      "reliability_beta": 2
+    },
+    {
+      "id": "302_304_homicide_v01:medical_officer",
+      "type": "expert",
+      "description": "Doctor who conducted autopsy or examined injuries",
+      "mens_rea_keywords": [
+        "force",
+        "direction",
+        "intentional",
+        "deliberate"
+      ],
+      "reliability_alpha": 6,
+      "reliability_beta": 2
+    },
+    {
+      "id": "302_304_homicide_v01:family_member",
+      "type": "character",
+      "description": "Family member testifying about relationship dynamics",
+      "mens_rea_keywords": [
+        "tension",
+        "conflict",
+        "threatened",
+        "fear"
+      ],
+      "reliability_alpha": 4,
+      "reliability_beta": 2
+    }
+  ],
+  "ground_truth_judgment": {
+    "judgment_type": "convict",
+    "min_argument_steps": 6,
+    "key_evidence": [
+      "weapon",
+      "autopsy_report"
+    ],
+    "key_witnesses": [
+      "eyewitness",
+      "medical_officer"
+    ]
+  },
+  "precedents": [
+    "ILDC_2020_045",
+    "ILDC_2018_112",
+    "ILDC_2021_089",
+    "ILDC_2019_001"
+  ],
+  "notes": "Level 1: Single accused, clear evidence. Level 4: Precedent conflict between 302 (murder) and 304 (culpable homicide not amounting to murder) | auto-variant 1"
+}
